@@ -1,0 +1,6 @@
+Thanks for downloading validate_email.
+
+To install it, make sure you have Python 2.2 or greater installed. Then run
+this command from the command prompt:
+
+    python setup.py install
