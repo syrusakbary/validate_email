@@ -1,8 +1,8 @@
 ==============
-validate_email
+Validate_email
 ==============
 
-validate_email is a package for Python that check if an email is valid, properly formatted and really exists (connecting to the server and "asking")
+Validate_email is a package for Python that check if an email is valid, properly formatted and really exists.
 
 
 
