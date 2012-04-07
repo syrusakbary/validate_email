@@ -81,7 +81,7 @@ ADDR_SPEC = LOCAL_PART + r'@' + DOMAIN               # see 3.4.1
 # A valid address will match exactly the 3.4.1 addr-spec.
 VALID_ADDRESS_REGEXP = '^' + ADDR_SPEC + '$'
 
-def validate_email(email, mx=False,verify=False):
+def validate_email(email, check_mx=False,verify=False):
 
     """Indicate whether the given string is a valid email address
     according to the 'addr-spec' portion of RFC 2822 (see section
@@ -92,8 +92,8 @@ def validate_email(email, mx=False,verify=False):
     to be in use as of 2011."""
     try:
         assert re.match(VALID_ADDRESS_REGEXP, email) is not None
-        mx |= verify
-        if mx:
+        check_mx |= verify
+        if check_mx:
             if not DNS: raise Exception('For check the mx records or check if the email exists you must have installed pyDNS python package')
             DNS.DiscoverNameServers()
             hostname = email[email.find('@')+1:]

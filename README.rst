@@ -36,13 +36,13 @@ Checking domain has SMTP Server
 Check if the host has SMPT Server::
 
     from validate_email import validate_email
-    is_valid = validate_email('example@example.com',mx=True)
+    is_valid = validate_email('example@example.com',check_mx=True)
 
 
 Verify email exists
 -------------------
 
-Check if the host has SMPT Server and the email exists in the server::
+Check if the host has SMPT Server and the email really exists::
 
     from validate_email import validate_email
     is_valid = validate_email('example@example.com',verify=True)
