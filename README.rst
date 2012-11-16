@@ -33,7 +33,7 @@ Basic usage::
 Checking domain has SMTP Server
 -------------------------------
 
-Check if the host has SMPT Server::
+Check if the host has SMTP Server::
 
     from validate_email import validate_email
     is_valid = validate_email('example@example.com',check_mx=True)
@@ -42,7 +42,7 @@ Check if the host has SMPT Server::
 Verify email exists
 -------------------
 
-Check if the host has SMPT Server and the email really exists::
+Check if the host has SMTP Server and the email really exists::
 
     from validate_email import validate_email
     is_valid = validate_email('example@example.com',verify=True)
