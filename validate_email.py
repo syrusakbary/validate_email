@@ -102,12 +102,19 @@ def validate_email(email, check_mx=False,verify=False):
                 try:
                     smtp = smtplib.SMTP()
                     smtp.connect(mx[1])
-                    if not verify: return True
+                    if not verify:
+                        smtp.quit()
+                        return True
                     status, _ = smtp.helo()
-                    if status != 250: continue
+                    if status != 250:
+                        smtp.quit()
+                        continue
                     smtp.mail('')
                     status, _ = smtp.rcpt(email)
-                    if status != 250: return False
+                    if status != 250:
+                        smtp.quit()
+                        return False
+                    smtp.quit()
                     break
                 except smtplib.SMTPServerDisconnected: #Server not permits verify user
                     break
