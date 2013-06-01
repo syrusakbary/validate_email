@@ -20,6 +20,7 @@
 import re
 import smtplib
 import logging
+import socket
 
 try:
     import DNS
@@ -95,6 +96,7 @@ def validate_email(email, check_mx=False, verify=False, debug=False):
     to be in use as of 2011."""
     if debug:
         logger = logging.getLogger('validate_email')
+        logger.setLevel(logging.DEBUG)
     else:
         logger = None
 
@@ -138,11 +140,41 @@ def validate_email(email, check_mx=False, verify=False, debug=False):
             return None
     except AssertionError:
         return False
-    except ServerError:
+    except (ServerError, socket.error) as e:
         if debug:
-            logger.debug(u'ServerError exception raised.')
+            logger.debug('ServerError or socket.error exception raised (%s).', e)
         return None
     return True
+
+if __name__ == "__main__":
+    import time
+    while True:
+        email = raw_input('Enter email for validation: ')
+
+        mx = raw_input('Validate MX record? [yN] ')
+        if mx.strip().lower() == 'y':
+            mx = True
+        else:
+            mx = False
+
+        validate = raw_input('Try to contact server for address validation? [yN] ')
+        if validate.strip().lower() == 'y':
+            validate = True
+        else:
+            validate = False
+
+        logging.basicConfig()
+
+        result = validate_email(email, mx, validate, debug=True)
+        if result:
+            print "Valid!"
+        elif result is None:
+            print "I'm not sure."
+        else:
+            print "Invalid!"
+
+        time.sleep(1)
+
 
 # import sys
 
