@@ -10,5 +10,5 @@ setup(name='validate_email',
       long_description=open('README.rst').read(),
       keywords = 'email validation verification mx verify',
       url = 'http://github.com/syrusakbary/validate_email',
-      license = 'LGPL',
+      license = 'GPL',
     )
