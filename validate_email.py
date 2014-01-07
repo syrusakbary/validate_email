@@ -85,6 +85,15 @@ ADDR_SPEC = LOCAL_PART + r'@' + DOMAIN               # see 3.4.1
 # A valid address will match exactly the 3.4.1 addr-spec.
 VALID_ADDRESS_REGEXP = '^' + ADDR_SPEC + '$'
 
+MX_DNS_CACHE = {}
+
+
+def get_mx_ip(hostname):
+    if hostname not in MX_DNS_CACHE:
+        MX_DNS_CACHE[hostname] = DNS.mxlookup(hostname)
+
+    return MX_DNS_CACHE[hostname]
+
 
 def validate_email(email, check_mx=False, verify=False, debug=False):
     """Indicate whether the given string is a valid email address
@@ -109,7 +118,7 @@ def validate_email(email, check_mx=False, verify=False, debug=False):
                                 'have installed pyDNS python package')
             DNS.DiscoverNameServers()
             hostname = email[email.find('@') + 1:]
-            mx_hosts = DNS.mxlookup(hostname)
+            mx_hosts = get_mx_ip(hostname)
             for mx in mx_hosts:
                 try:
                     smtp = smtplib.SMTP()
