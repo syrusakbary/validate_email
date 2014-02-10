@@ -17,19 +17,22 @@
 # exception of a circular definition (see comments below), and
 # with the omission of the pattern components marked as "obsolete".
 
+import functools
+import itertools
+import logging
+import optparse
 import re
 import smtplib
-import logging
 import socket
+import sys
+import time
+from multiprocessing import Pool
 
 try:
     import DNS
-    ServerError = DNS.ServerError
+    DNS.DiscoverNameServers()
 except ImportError:
     DNS = None
-
-    class ServerError(Exception):
-        pass
 
 # All we are really doing is comparing the input string to one
 # gigantic regular expression.  But building that regexp, and
@@ -43,7 +46,7 @@ except ImportError:
 # (To make things simple, every string below is given as 'raw',
 # even when it's not strictly necessary.  This way we don't forget
 # when it is necessary.)
-#
+
 WSP = r'[ \t]'                                       # see 2.2.2. Structured Header Field Bodies
 CRLF = r'(?:\r\n)'                                   # see 2.2.3. Long Header Fields
 NO_WS_CTL = r'\x01-\x08\x0b\x0c\x0f-\x1f\x7f'        # see 3.2.1. Primitive Tokens
@@ -86,16 +89,78 @@ ADDR_SPEC = LOCAL_PART + r'@' + DOMAIN               # see 3.4.1
 VALID_ADDRESS_REGEXP = '^' + ADDR_SPEC + '$'
 
 MX_DNS_CACHE = {}
+SMTP_CACHE = {}
+
+
+def iter_rate_limit(rate, iterable):
+    iterator = iter(iterable)
+    if not callable(rate):
+        # constant rate
+        rate_0 = rate
+        rate = lambda t: rate_0
+
+    t = t0 = time.time()
+    yield next(iterator)
+
+    for x in iterator:
+        dt = (1. / rate(t - t0)) - (time.time() - t)
+        if dt > 0:
+            time.sleep(dt)
+
+        t = time.time()
+        yield x
+
+
+def pmap(iterable, func, workers, rate=0):
+    if rate:
+        iterable = iter_rate_limit(rate, iterable)
+    if workers == 1:
+        for r in itertools.imap(func, iterable):
+            yield r
+    else:
+        pool = Pool(processes=workers)
+        for r in pool.imap_unordered(func, iterable):
+            yield r
 
 
 def get_mx_ip(hostname):
-    if hostname not in MX_DNS_CACHE:
-        MX_DNS_CACHE[hostname] = DNS.mxlookup(hostname)
+    try:
+        return MX_DNS_CACHE[hostname]
+    except KeyError:
+        mx_hosts = DNS.mxlookup(hostname)
+        MX_DNS_CACHE[hostname] = mx_hosts
+        return mx_hosts
 
-    return MX_DNS_CACHE[hostname]
+
+def connect_smtp(email, mx, check_mx, verify, timeout):
+    mx_server = mx[1] if isinstance(mx, tuple) else mx
+    try:
+        smtp = SMTP_CACHE[mx_server]
+        # smtp.connect()
+    except KeyError:
+        try:
+            smtp = smtplib.SMTP(mx_server, 25, timeout=timeout)
+        except socket.timeout:
+            smtp = smtplib.SMTP(mx_server, 587, timeout=timeout)
+
+        SMTP_CACHE[mx] = smtp
+
+    if not verify:
+        return True  # Valid
+
+    status, _ = smtp.helo()
+    if status != 250:
+        return False  # Continue
+
+    smtp.mail('')
+    status, _ = smtp.rcpt(email)
+    if status == 250:
+        return True  # Valid
 
 
-def validate_email(email, check_mx=False, verify=False, debug=False):
+
+def validate_email(email, check_mx=False, verify=False,
+                   timeout=10, debug=False):
     """Indicate whether the given string is a valid email address
     according to the 'addr-spec' portion of RFC 2822 (see section
     3.4.1).  Parts of the spec that are marked obsolete are *not*
@@ -109,83 +174,115 @@ def validate_email(email, check_mx=False, verify=False, debug=False):
     else:
         logger = None
 
+    email = email.strip()
+
     try:
         assert re.match(VALID_ADDRESS_REGEXP, email) is not None
-        check_mx |= verify
-        if check_mx:
-            if not DNS:
-                raise Exception('For check the mx records or check if the email exists you must '
-                                'have installed pyDNS python package')
-            DNS.DiscoverNameServers()
-            hostname = email[email.find('@') + 1:]
-            mx_hosts = get_mx_ip(hostname)
-            for mx in mx_hosts:
-                try:
-                    smtp = smtplib.SMTP()
-                    smtp.connect(mx[1])
-                    if not verify:
-                        smtp.quit()
-                        return True
-                    status, _ = smtp.helo()
-                    if status != 250:
-                        smtp.quit()
-                        if debug:
-                            logger.debug(u'%s answer: %s - %s', mx[1], status, _)
-                        continue
-                    smtp.mail('')
-                    status, _ = smtp.rcpt(email)
-                    if status == 250:
-                        smtp.quit()
-                        return True
-                    if debug:
-                        logger.debug(u'%s answer: %s - %s', mx[1], status, _)
-                    smtp.quit()
-                except smtplib.SMTPServerDisconnected:  # Server not permits verify user
-                    if debug:
-                        logger.debug(u'%s disconected.', mx[1])
-                except smtplib.SMTPConnectError:
-                    if debug:
-                        logger.debug(u'Unable to connect to %s.', mx[1])
-            return None
     except AssertionError:
-        return False
-    except (ServerError, socket.error) as e:
-        if debug:
-            logger.debug('ServerError or socket.error exception raised (%s).', e)
-        return None
-    return True
+        return email, False  # Invalid
 
-if __name__ == "__main__":
-    import time
-    while True:
-        email = raw_input('Enter email for validation: ')
+    check_mx |= verify
 
-        mx = raw_input('Validate MX record? [yN] ')
-        if mx.strip().lower() == 'y':
-            mx = True
-        else:
-            mx = False
+    if check_mx:
+        return email, True
 
-        validate = raw_input('Try to contact server for address validation? [yN] ')
-        if validate.strip().lower() == 'y':
-            validate = True
-        else:
-            validate = False
+    if not DNS:
+        raise Exception('For check the mx records or check if '
+                        'the email exists you must have '
+                        'installed pyDNS python package')
 
-        logging.basicConfig()
+    hostname = email[email.find('@') + 1:]
 
-        result = validate_email(email, mx, validate, debug=True)
-        if result:
-            print "Valid!"
-        elif result is None:
-            print "I'm not sure."
-        else:
-            print "Invalid!"
+    try:
+        mx_hosts = get_mx_ip(hostname)
 
-        time.sleep(1)
+    except DNS.Base.TimeoutError:
+        return email, None  # Not sure
+
+    except DNS.ServerError:
+        return email, False  # Invalid
+
+    for mx in mx_hosts:
+        try:
+            if connect_smtp(email, mx, check_mx, verify, timeout):
+                return email, True  # Verified
+
+        except smtplib.SMTPServerDisconnected:
+            break  # Server not permits verify user
+
+        except smtplib.SMTPConnectError:
+            continue
+
+        except socket.timeout:
+            continue
+
+        except socket.error:
+            continue
+
+    return email, None  # Not sure
 
 
-# import sys
+def run(email=None, input_file=None, check_mx=False, verify=False,
+        workers=10, rate=10, timeout=10, debug=False):
+    if email:
+        print validate_email(email, verify=True)
+        return 0
 
-# sys.modules[__name__],sys.modules['validate_email_module'] = validate_email,sys.modules[__name__]
-# from validate_email_module import *
+    func = functools.partial(validate_email,
+                             check_mx=check_mx, verify=verify, timeout=timeout)
+    with open(input_file) as f:
+        with open('valid-%s' % input_file, 'w', 0) as f_valid:
+            with open('invalid-%s' % input_file, 'w', 0) as f_invalid:
+                for email, result in pmap(f, func, workers, rate):
+                    if result:
+                        f_valid.write(email)
+                        f_valid.write('\n')
+                    else:
+                        f_invalid.write(email)
+                        f_invalid.write('\n')
+
+                # for smtp in SMTP_CACHE.itervalues():
+                #     if smtp:
+                #         smtp.quit()
+
+    return 0
+
+
+def parse_args(args):
+    parser = optparse.OptionParser(
+        usage="email_verification [options]",
+        description="Description: Basic email verification",
+        epilog="**Example: email_verification --email=test@example.com")
+    parser.add_option(
+        '--email', dest='email',
+        help='Email address we want to verify',
+        default=None)
+    parser.add_option(
+        '--input-file', dest='input_file',
+        help='Filename with the list of email addresses we want to verify',
+        default=None)
+    parser.add_option("-r", type="int", dest="rate", default=10)
+    parser.add_option("-t", type="int", dest="timeout", default=10)
+    parser.add_option("-w", type="int", dest="workers", default=10)
+    parser.add_option(
+        '--check-mx', dest='check_mx', action='store_true',
+        help='Check if the host has SMTP Server', default=False)
+    parser.add_option(
+        '--verify', dest='verify', action='store_true',
+        help='Check if the host has SMTP Server and the email really exists',
+        default=False)
+    parser.add_option(
+        '--debug', dest='debug', action='store_true',
+        help='show debugging messages', default=False)
+
+    params, args = parser.parse_args(list(args))
+    return params.__dict__
+
+
+def main(*args):
+    params = parse_args(args)
+    return run(**params)
+
+
+if __name__ == '__main__':
+    main(*sys.argv[1:])
