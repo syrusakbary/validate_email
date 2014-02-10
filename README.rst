@@ -29,6 +29,22 @@ Basic usage::
     from validate_email import validate_email
     is_valid = validate_email('example@example.com')
 
+Command-line usage::
+
+    Options:
+      -h, --help              Show this help message and exit
+      --email=EMAIL           Email address we want to verify
+      --input-file=INPUT_FILE Filename with the list of email addresses we want to verify
+      -r RATE
+      -t TIMEOUT
+      -w WORKERS
+      --check-mx            Check if the host has SMTP Server
+      --verify              Check if the host has SMTP Server and the email really exists
+      --debug               show debugging messages
+
+    **Example: email_verification --email=test@example.com
+
+
 
 Checking domain has SMTP Server
 -------------------------------
@@ -50,4 +66,4 @@ Check if the host has SMTP Server and the email really exists::
 
 TODOs and BUGS
 ==============
-See: http://github.com/syrusakbary/validate_email/issues
+See: http://github.com/robertobarreda/validate_email/issues
