@@ -250,7 +250,7 @@ def run(email=None, input_file=None, check_mx=False, verify=False,
 
 def parse_args(args):
     parser = optparse.OptionParser(
-        usage="email_verification[options]",
+        usage="email_verification [options]",
         description="Description: Basic email verification",
         epilog="**Example: email_verification --email=test@example.com")
     parser.add_option(
