@@ -95,7 +95,7 @@ def get_mx_ip(hostname):
     return MX_DNS_CACHE[hostname]
 
 
-def validate_email(email, check_mx=False, verify=False, debug=False):
+def validate_email(email, check_mx=False, verify=False, debug=False, smtp_timeout=10):
     """Indicate whether the given string is a valid email address
     according to the 'addr-spec' portion of RFC 2822 (see section
     3.4.1).  Parts of the spec that are marked obsolete are *not*
@@ -121,7 +121,7 @@ def validate_email(email, check_mx=False, verify=False, debug=False):
             mx_hosts = get_mx_ip(hostname)
             for mx in mx_hosts:
                 try:
-                    smtp = smtplib.SMTP()
+                    smtp = smtplib.SMTP(timeout=smtp_timeout)
                     smtp.connect(mx[1])
                     if not verify:
                         smtp.quit()
@@ -174,7 +174,7 @@ if __name__ == "__main__":
 
         logging.basicConfig()
 
-        result = validate_email(email, mx, validate, debug=True)
+        result = validate_email(email, mx, validate, debug=True, smtp_timeout=1)
         if result:
             print "Valid!"
         elif result is None:
