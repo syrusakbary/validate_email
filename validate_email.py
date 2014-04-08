@@ -124,7 +124,10 @@ def validate_email(email, check_mx=False, verify=False, debug=False, smtp_timeou
                     smtp = smtplib.SMTP(timeout=smtp_timeout)
                     smtp.connect(mx[1])
                     if not verify:
-                        smtp.quit()
+                        try:
+                            smtp.quit()
+                        except smtplib.SMTPServerDisconnected:
+                            pass
                         return True
                     status, _ = smtp.helo()
                     if status != 250:
