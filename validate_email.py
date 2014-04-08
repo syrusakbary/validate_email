@@ -86,6 +86,7 @@ ADDR_SPEC = LOCAL_PART + r'@' + DOMAIN               # see 3.4.1
 VALID_ADDRESS_REGEXP = '^' + ADDR_SPEC + '$'
 
 MX_DNS_CACHE = {}
+MX_CHECK_CACHE = {}
 
 
 def get_mx_ip(hostname):
@@ -129,8 +130,11 @@ def validate_email(email, check_mx=False, verify=False, debug=False, smtp_timeou
                 return False
             for mx in mx_hosts:
                 try:
+                    if not verify and mx[1] in MX_CHECK_CACHE:
+                        return MX_CHECK_CACHE[mx[1]]
                     smtp = smtplib.SMTP(timeout=smtp_timeout)
                     smtp.connect(mx[1])
+                    MX_CHECK_CACHE[mx[1]] = True
                     if not verify:
                         try:
                             smtp.quit()
