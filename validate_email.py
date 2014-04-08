@@ -25,6 +25,7 @@ import socket
 try:
     import DNS
     ServerError = DNS.ServerError
+    DNS.DiscoverNameServers()
 except ImportError:
     DNS = None
 
@@ -123,7 +124,6 @@ def validate_email(email, check_mx=False, verify=False, debug=False, smtp_timeou
             if not DNS:
                 raise Exception('For check the mx records or check if the email exists you must '
                                 'have installed pyDNS python package')
-            DNS.DiscoverNameServers()
             hostname = email[email.find('@') + 1:]
             mx_hosts = get_mx_ip(hostname)
             if mx_hosts is None:
