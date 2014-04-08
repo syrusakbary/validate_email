@@ -25,6 +25,7 @@ import socket
 try:
     import DNS
     ServerError = DNS.ServerError
+    DNS.DiscoverNameServers()
 except ImportError:
     DNS = None
 
@@ -86,11 +87,18 @@ ADDR_SPEC = LOCAL_PART + r'@' + DOMAIN               # see 3.4.1
 VALID_ADDRESS_REGEXP = '^' + ADDR_SPEC + '$'
 
 MX_DNS_CACHE = {}
+MX_CHECK_CACHE = {}
 
 
 def get_mx_ip(hostname):
     if hostname not in MX_DNS_CACHE:
-        MX_DNS_CACHE[hostname] = DNS.mxlookup(hostname)
+        try:
+            MX_DNS_CACHE[hostname] = DNS.mxlookup(hostname)
+        except ServerError, e:
+            if e.rcode == 3:  # NXDOMAIN (Non-Existent Domain)
+                MX_DNS_CACHE[hostname] = None
+            else:
+                raise
 
     return MX_DNS_CACHE[hostname]
 
@@ -116,15 +124,22 @@ def validate_email(email, check_mx=False, verify=False, debug=False, smtp_timeou
             if not DNS:
                 raise Exception('For check the mx records or check if the email exists you must '
                                 'have installed pyDNS python package')
-            DNS.DiscoverNameServers()
             hostname = email[email.find('@') + 1:]
             mx_hosts = get_mx_ip(hostname)
+            if mx_hosts is None:
+                return False
             for mx in mx_hosts:
                 try:
+                    if not verify and mx[1] in MX_CHECK_CACHE:
+                        return MX_CHECK_CACHE[mx[1]]
                     smtp = smtplib.SMTP(timeout=smtp_timeout)
                     smtp.connect(mx[1])
+                    MX_CHECK_CACHE[mx[1]] = True
                     if not verify:
-                        smtp.quit()
+                        try:
+                            smtp.quit()
+                        except smtplib.SMTPServerDisconnected:
+                            pass
                         return True
                     status, _ = smtp.helo()
                     if status != 250:
