@@ -90,7 +90,13 @@ MX_DNS_CACHE = {}
 
 def get_mx_ip(hostname):
     if hostname not in MX_DNS_CACHE:
-        MX_DNS_CACHE[hostname] = DNS.mxlookup(hostname)
+        try:
+            MX_DNS_CACHE[hostname] = DNS.mxlookup(hostname)
+        except ServerError, e:
+            if e.rcode == 3:  # NXDOMAIN (Non-Existent Domain)
+                MX_DNS_CACHE[hostname] = None
+            else:
+                raise
 
     return MX_DNS_CACHE[hostname]
 
@@ -119,6 +125,8 @@ def validate_email(email, check_mx=False, verify=False, debug=False, smtp_timeou
             DNS.DiscoverNameServers()
             hostname = email[email.find('@') + 1:]
             mx_hosts = get_mx_ip(hostname)
+            if mx_hosts is None:
+                return False
             for mx in mx_hosts:
                 try:
                     smtp = smtplib.SMTP(timeout=smtp_timeout)
