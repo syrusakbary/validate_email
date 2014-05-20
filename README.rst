@@ -66,4 +66,4 @@ Check if the host has SMTP Server and the email really exists::
 
 TODOs and BUGS
 ==============
-See: http://github.com/robertobarreda/validate_email/issues
+See: http://github.com/syrusakbary/validate_email/issues
