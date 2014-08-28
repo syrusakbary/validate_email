@@ -10,5 +10,10 @@ setup(name='validate_email',
       long_description=open('README.rst').read(),
       keywords = 'email validation verification mx verify',
       url = 'http://github.com/syrusakbary/validate_email',
-      license = 'GPL',
-    )
+      license = 'LGPLv3',
+      classifiers=('Topic :: Communications :: Email',
+                   'Topic :: Utilities',
+                   'License :: OSI Approved',
+                   'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
+                   'Programming Language :: Python :: 2',
+                   'Programming Language :: Python :: 3', ))
