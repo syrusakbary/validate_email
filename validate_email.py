@@ -94,7 +94,7 @@ def get_mx_ip(hostname):
     if hostname not in MX_DNS_CACHE:
         try:
             MX_DNS_CACHE[hostname] = DNS.mxlookup(hostname)
-        except ServerError, e:
+        except ServerError as e:
             if e.rcode == 3:  # NXDOMAIN (Non-Existent Domain)
                 MX_DNS_CACHE[hostname] = None
             else:
@@ -172,6 +172,10 @@ def validate_email(email, check_mx=False, verify=False, debug=False, smtp_timeou
 
 if __name__ == "__main__":
     import time
+    try:
+        raw_input = input
+    except NameError:
+        pass
     while True:
         email = raw_input('Enter email for validation: ')
 
@@ -191,11 +195,11 @@ if __name__ == "__main__":
 
         result = validate_email(email, mx, validate, debug=True, smtp_timeout=1)
         if result:
-            print "Valid!"
+            print("Valid!")
         elif result is None:
-            print "I'm not sure."
+            print("I'm not sure.")
         else:
-            print "Invalid!"
+            print("Invalid!")
 
         time.sleep(1)
 
