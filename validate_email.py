@@ -118,52 +118,52 @@ def validate_email(email, check_mx=False, verify=False, debug=False, smtp_timeou
         logger = None
 
     try:
-        assert re.match(VALID_ADDRESS_REGEXP, email) is not None
-        check_mx |= verify
-        if check_mx:
-            if not DNS:
-                raise Exception('For check the mx records or check if the email exists you must '
-                                'have installed pyDNS python package')
-            hostname = email[email.find('@') + 1:]
-            mx_hosts = get_mx_ip(hostname)
-            if mx_hosts is None:
-                return False
-            for mx in mx_hosts:
-                try:
-                    if not verify and mx[1] in MX_CHECK_CACHE:
-                        return MX_CHECK_CACHE[mx[1]]
-                    smtp = smtplib.SMTP(timeout=smtp_timeout)
-                    smtp.connect(mx[1])
-                    MX_CHECK_CACHE[mx[1]] = True
-                    if not verify:
-                        try:
+        if re.match(VALID_ADDRESS_REGEXP, email) is not None:
+            check_mx |= verify
+            if check_mx:
+                if not DNS:
+                    raise Exception('For check the mx records or check if the email exists you must '
+                                    'have installed pyDNS python package')
+                hostname = email[email.find('@') + 1:]
+                mx_hosts = get_mx_ip(hostname)
+                if mx_hosts is None:
+                    return False
+                for mx in mx_hosts:
+                    try:
+                        if not verify and mx[1] in MX_CHECK_CACHE:
+                            return MX_CHECK_CACHE[mx[1]]
+                        smtp = smtplib.SMTP(timeout=smtp_timeout)
+                        smtp.connect(mx[1])
+                        MX_CHECK_CACHE[mx[1]] = True
+                        if not verify:
+                            try:
+                                smtp.quit()
+                            except smtplib.SMTPServerDisconnected:
+                                pass
+                            return True
+                        status, _ = smtp.helo()
+                        if status != 250:
                             smtp.quit()
-                        except smtplib.SMTPServerDisconnected:
-                            pass
-                        return True
-                    status, _ = smtp.helo()
-                    if status != 250:
-                        smtp.quit()
+                            if debug:
+                                logger.debug(u'%s answer: %s - %s', mx[1], status, _)
+                            continue
+                        smtp.mail('')
+                        status, _ = smtp.rcpt(email)
+                        if status == 250:
+                            smtp.quit()
+                            return True
                         if debug:
                             logger.debug(u'%s answer: %s - %s', mx[1], status, _)
-                        continue
-                    smtp.mail('')
-                    status, _ = smtp.rcpt(email)
-                    if status == 250:
                         smtp.quit()
-                        return True
-                    if debug:
-                        logger.debug(u'%s answer: %s - %s', mx[1], status, _)
-                    smtp.quit()
-                except smtplib.SMTPServerDisconnected:  # Server not permits verify user
-                    if debug:
-                        logger.debug(u'%s disconected.', mx[1])
-                except smtplib.SMTPConnectError:
-                    if debug:
-                        logger.debug(u'Unable to connect to %s.', mx[1])
-            return None
-    except AssertionError:
-        return False
+                    except smtplib.SMTPServerDisconnected:  # Server not permits verify user
+                        if debug:
+                            logger.debug(u'%s disconected.', mx[1])
+                    except smtplib.SMTPConnectError:
+                        if debug:
+                            logger.debug(u'Unable to connect to %s.', mx[1])
+                return None
+        else:
+            return False
     except (ServerError, socket.error) as e:
         if debug:
             logger.debug('ServerError or socket.error exception raised (%s).', e)
