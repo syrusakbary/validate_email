@@ -23,6 +23,12 @@ import logging
 import socket
 
 try:
+    raw_input
+except NameError:
+    def raw_input(prompt=''):
+        return input(prompt)
+
+try:
     import DNS
     ServerError = DNS.ServerError
     DNS.DiscoverNameServers()
@@ -94,7 +100,7 @@ def get_mx_ip(hostname):
     if hostname not in MX_DNS_CACHE:
         try:
             MX_DNS_CACHE[hostname] = DNS.mxlookup(hostname)
-        except ServerError, e:
+        except ServerError as e:
             if e.rcode == 3:  # NXDOMAIN (Non-Existent Domain)
                 MX_DNS_CACHE[hostname] = None
             else:
@@ -191,11 +197,11 @@ if __name__ == "__main__":
 
         result = validate_email(email, mx, validate, debug=True, smtp_timeout=1)
         if result:
-            print "Valid!"
+            print("Valid!")
         elif result is None:
-            print "I'm not sure."
+            print("I'm not sure.")
         else:
-            print "Invalid!"
+            print("Invalid!")
 
         time.sleep(1)
 
