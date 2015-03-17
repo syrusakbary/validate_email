@@ -32,7 +32,7 @@ try:
     import DNS
     ServerError = DNS.ServerError
     DNS.DiscoverNameServers()
-except ImportError:
+except (ImportError, AttributeError):
     DNS = None
 
     class ServerError(Exception):
