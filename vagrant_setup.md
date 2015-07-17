@@ -18,7 +18,9 @@ How to Set Up Validate Email Using Vagrant on PC
 3. Install pipin the vm
     * http://www.saltycrane.com/blog/2010/02/how-install-pip-ubuntu/
     * tl;dr
-        * $ sudo apt-get install python-pip
+        ```
+        $ sudo apt-get install python-pip
+        ```
 4. Install pyDNS
     ```
     This is a package dependency of validate email
