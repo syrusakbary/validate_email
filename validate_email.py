@@ -101,7 +101,7 @@ def get_mx_ip(hostname):
         try:
             MX_DNS_CACHE[hostname] = DNS.mxlookup(hostname)
         except ServerError as e:
-	     if e.rcode == 3 or e.rcode == 2:  # NXDOMAIN (Non-Existent Domain) or SERVFAIL
+            if e.rcode == 3 or e.rcode == 2:  # NXDOMAIN (Non-Existent Domain) or SERVFAIL
                 MX_DNS_CACHE[hostname] = None
             else:
                 raise
