@@ -215,7 +215,7 @@ if __name__ == "__main__":
 
         logging.basicConfig()
 
-        result = validate_email(email, mx, validate, noca, debug=True, smtp_timeout=1)
+        result = validate_email(email, mx, validate, noca, debug=False, smtp_timeout=1)
         if result:
             print("Valid!")
         elif result is None:
