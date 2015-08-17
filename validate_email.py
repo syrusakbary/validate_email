@@ -51,6 +51,10 @@ except (ImportError, AttributeError):
 # even when it's not strictly necessary.  This way we don't forget
 # when it is necessary.)
 #
+# Add-on:
+#            catchall option added to check if this mailhost is
+#            serving catch-all addresses. NOT FOUL PROOF
+#
 WSP = r'[\s]'                                        # see 2.2.2. Structured Header Field Bodies
 CRLF = r'(?:\r\n)'                                   # see 2.2.3. Long Header Fields
 NO_WS_CTL = r'\x01-\x08\x0b\x0c\x0f-\x1f\x7f'        # see 3.2.1. Primitive Tokens
@@ -109,7 +113,7 @@ def get_mx_ip(hostname):
     return MX_DNS_CACHE[hostname]
 
 
-def validate_email(email, check_mx=False, verify=False, debug=False, smtp_timeout=10):
+def validate_email(email, check_mx=False, verify=False, catchall=False, debug=False, smtp_timeout=10):
     """Indicate whether the given string is a valid email address
     according to the 'addr-spec' portion of RFC 2822 (see section
     3.4.1).  Parts of the spec that are marked obsolete are *not*
@@ -155,6 +159,16 @@ def validate_email(email, check_mx=False, verify=False, debug=False, smtp_timeou
                         continue
                     smtp.mail('')
                     status, _ = smtp.rcpt(email)
+                    if catchall:
+                        import random, string
+                        smtp.quit()
+                        smtp.connect(mx[1])
+                        smtp.helo()
+                        smtp.mail('')
+                        status, _ = smtp.rcpt(''.join(random.choice(string.lowercase) for i in range(25)) + '@' + email.split('@')[1])
+                        if status == 250:
+                            smtp.quit()
+                            return False
                     if status == 250:
                         smtp.quit()
                         return True
@@ -193,9 +207,15 @@ if __name__ == "__main__":
         else:
             validate = False
 
+        noca = raw_input('Accept catch-all? [yN] ')
+        if noca.strip().lower() == 'y':
+            noca  = False
+        else:
+            noca = True
+
         logging.basicConfig()
 
-        result = validate_email(email, mx, validate, debug=True, smtp_timeout=1)
+        result = validate_email(email, mx, validate, noca, debug=True, smtp_timeout=1)
         if result:
             print("Valid!")
         elif result is None:
