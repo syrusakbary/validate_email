@@ -169,6 +169,9 @@ def validate_email(email, check_mx=False, verify=False, catchall=False, debug=Fa
                         if status == 250:
                             smtp.quit()
                             return False
+                        if status == 550:
+                            smtp.quit()
+                            return True
                     if status == 250:
                         smtp.quit()
                         return True
