@@ -174,7 +174,7 @@ def validate_email(email, check_mx=False, verify=False, debug=False, mail_from='
                 except smtplib.SMTPConnectError:
                     if debug:
                         logger.debug(u'Unable to connect to %s.', mx[1])
-            return None
+            return False
     except AssertionError:
         return False
     except (ServerError, socket.error) as e:
