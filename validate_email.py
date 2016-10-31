@@ -21,6 +21,7 @@ import re
 import smtplib
 import logging
 import socket
+import os
 
 try:
     raw_input
@@ -103,14 +104,14 @@ def _load_disposable():
     global _disposable_loaded
     global _disposable
     disposable = []
-    with open("./disposable_emails.conf") as f:
+    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "disposable_emails.conf")) as f:
         for line in f:
             disposable.append(line[0:len(line) - 1])
     _disposable = disposable
     _disposable_loaded = True
 
 def is_disposable(email, debug=False):
-    """Indicate whether the email is known as being a dispoable email or not"""
+    """Indicate whether the email is known as being a disposable email or not"""
     if not _disposable_loaded:
         _load_disposable()
     for domain in _disposable:
