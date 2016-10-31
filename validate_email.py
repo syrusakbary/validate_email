@@ -95,6 +95,32 @@ VALID_ADDRESS_REGEXP = '^' + ADDR_SPEC + '$'
 MX_DNS_CACHE = {}
 MX_CHECK_CACHE = {}
 
+_disposable_loaded = False
+_disposable = []
+
+def _load_disposable():
+    """Helper function lading the list of disposable emails"""
+    global _disposable_loaded
+    global _disposable
+    disposable = []
+    with open("./disposable_emails.conf") as f:
+        for line in f:
+            disposable.append(line[0:len(line) - 1])
+    _disposable = disposable
+    _disposable_loaded = True
+
+def is_disposable(email, debug=False):
+    """Indicate whether the email is known as being a dispoable email or not"""
+    if not _disposable_loaded:
+        _load_disposable()
+    for domain in _disposable:
+        if email.endswith(domain):
+            if debug:
+                logging.getLogger("validate_email").debug("Email %s is flagged as disposable (domain=%s)",
+                                                          email, domain)
+            return True
+    return False
+
 
 def get_mx_ip(hostname):
     if hostname not in MX_DNS_CACHE:
@@ -109,7 +135,7 @@ def get_mx_ip(hostname):
     return MX_DNS_CACHE[hostname]
 
 
-def validate_email(email, check_mx=False, verify=False, debug=False, smtp_timeout=10):
+def validate_email(email, check_mx=False, verify=False, debug=False, smtp_timeout=10, allow_disposable=True):
     """Indicate whether the given string is a valid email address
     according to the 'addr-spec' portion of RFC 2822 (see section
     3.4.1).  Parts of the spec that are marked obsolete are *not*
@@ -126,6 +152,9 @@ def validate_email(email, check_mx=False, verify=False, debug=False, smtp_timeou
     try:
         assert re.match(VALID_ADDRESS_REGEXP, email) is not None
         check_mx |= verify
+        if not allow_disposable:
+            if is_disposable(email):
+                return False
         if check_mx:
             if not DNS:
                 raise Exception('For check the mx records or check if the email exists you must '
@@ -193,9 +222,15 @@ if __name__ == "__main__":
         else:
             validate = False
 
+        disposable = raw_input('Can the email be disposable? [Yn] ')
+        if disposable.strip().lower() == 'n':
+            disposable = False
+        else:
+            disposable = True
+
         logging.basicConfig()
 
-        result = validate_email(email, mx, validate, debug=True, smtp_timeout=1)
+        result = validate_email(email, mx, validate, debug=True, smtp_timeout=1, allow_disposable=disposable)
         if result:
             print("Valid!")
         elif result is None:
