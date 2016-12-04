@@ -100,9 +100,9 @@ MX_CHECK_CACHE = {}
 def is_disposable(email, debug=False):
     """Indicate whether the email is known as being a disposable email or not"""
     for domain in _disposable:
-        if email.endswith(domain):
+        if email.endswith("@{}".format(domain)):
             if debug:
-                logging.getLogger("validate_email").debug("Email %s is flagged as disposable (domain=%s)",
+                logging.getLogger("validate_email").warn("Email %s is flagged as disposable (domain=%s)",
                                                           email, domain)
             return True
     return False
@@ -139,7 +139,7 @@ def validate_email(email, check_mx=False, verify=False, debug=False, smtp_timeou
         assert re.match(VALID_ADDRESS_REGEXP, email) is not None
         check_mx |= verify
         if not allow_disposable:
-            if is_disposable(email):
+            if is_disposable(email, debug=debug):
                 return False
         if check_mx:
             if not DNS:
