@@ -99,12 +99,12 @@ MX_CHECK_CACHE = {}
 
 def is_disposable(email, debug=False):
     """Indicate whether the email is known as being a disposable email or not"""
-    for domain in _disposable:
-        if email.endswith("@{}".format(domain)):
-            if debug:
-                logging.getLogger("validate_email").warn("Email %s is flagged as disposable (domain=%s)",
-                                                          email, domain)
-            return True
+    email_domain = email.rsplit("@", 1)[1]
+    if email_domain in _disposable:
+        if debug:
+            logging.getLogger("validate_email").warn("Email %s is flagged as disposable (domain=%s)",
+                                                      email, domain)
+        return True
     return False
 
 
@@ -232,7 +232,7 @@ if __name__ == "__main__":
 # sys.modules[__name__],sys.modules['validate_email_module'] = validate_email,sys.modules[__name__]
 # from validate_email_module import *
 
-_disposable = ["0-mail.com", "027168.com", "0815.ru", "0815.ry", "0815.su", "0845.ru", "0clickemail.com", "0wnd.net",
+_disposable = {"0-mail.com", "027168.com", "0815.ru", "0815.ry", "0815.su", "0845.ru", "0clickemail.com", "0wnd.net",
                "0wnd.org", "0x207.info", "1-8.biz", "100likers.com", "10mail.com", "10mail.org", "10minut.com.pl",
                "10minutemail.cf", "10minutemail.co.uk", "10minutemail.co.za", "10minutemail.com", "10minutemail.de",
                "10minutemail.ga", "10minutemail.gq", "10minutemail.ml", "10minutemail.net", "10minutesmail.com",
@@ -585,4 +585,4 @@ _disposable = ["0-mail.com", "027168.com", "0815.ru", "0815.ry", "0815.su", "084
                "zasod.com", "zebins.com", "zebins.eu", "zehnminuten.de", "zehnminutenmail.de", "zepp.dk", "zetmail.com",
                "zfymail.com", "zik.dj", "zippymail.info", "zipsendtest.com", "zoaxe.com", "zoemail.com", "zoemail.net",
                "zoemail.org", "zoetropes.org", "zombie-hive.com", "zomg.info", "zp.ua", "zumpul.com", "zxcv.com",
-               "zxcvbnm.com", "zzz.com"]
+               "zxcvbnm.com", "zzz.com"}
