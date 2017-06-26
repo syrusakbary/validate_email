@@ -20,6 +20,10 @@ For check the domain mx and verify email exits you must have the `pyDNS` package
 
     pip install pyDNS
 
+or install them both in one step from the beginning::
+
+    pip install validate-email[dns]
+
 
 USAGE
 =====

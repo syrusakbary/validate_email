@@ -10,5 +10,8 @@ setup(name='validate_email',
       long_description=open('README.rst').read(),
       keywords = 'email validation verification mx verify',
       url = 'http://github.com/syrusakbary/validate_email',
+      extras_require = {
+            'dns:sys_platform != "win32"': ['pyDNS']
+      },
       license = 'LGPL',
     )
