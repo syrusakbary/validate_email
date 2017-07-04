@@ -109,7 +109,7 @@ def get_mx_ip(hostname):
     return MX_DNS_CACHE[hostname]
 
 
-def validate_email(email, check_mx=False, verify=False, debug=False, smtp_timeout=10):
+def validate_email(email, check_mx=False, verify=False, debug=False, smtp_timeout=10, helo=None):
     """Indicate whether the given string is a valid email address
     according to the 'addr-spec' portion of RFC 2822 (see section
     3.4.1).  Parts of the spec that are marked obsolete are *not*
@@ -147,7 +147,7 @@ def validate_email(email, check_mx=False, verify=False, debug=False, smtp_timeou
                         except smtplib.SMTPServerDisconnected:
                             pass
                         return True
-                    status, _ = smtp.helo()
+                    status, _ = smtp.helo(helo)
                     if status != 250:
                         smtp.quit()
                         if debug:
