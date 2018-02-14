@@ -134,9 +134,11 @@ def validate_email(email, check_mx=False, verify=False, debug=False, smtp_timeou
             mx_hosts = get_mx_ip(hostname)
             if mx_hosts is None:
                 return False
+            if not verify:
+                return True
             for mx in mx_hosts:
                 try:
-                    if not verify and mx[1] in MX_CHECK_CACHE:
+                    if mx[1] in MX_CHECK_CACHE:
                         return MX_CHECK_CACHE[mx[1]]
                     smtp = smtplib.SMTP(timeout=smtp_timeout)
                     smtp.connect(mx[1])
