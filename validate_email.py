@@ -124,7 +124,8 @@ def validate_email(email, check_mx=False, verify=False, debug=False, smtp_timeou
         logger = None
 
     try:
-        assert re.match(VALID_ADDRESS_REGEXP, email) is not None
+        if re.match(VALID_ADDRESS_REGEXP, email) is None:
+            return False
         check_mx |= verify
         if check_mx:
             if not DNS:
@@ -168,8 +169,6 @@ def validate_email(email, check_mx=False, verify=False, debug=False, smtp_timeou
                     if debug:
                         logger.debug(u'Unable to connect to %s.', mx[1])
             return None
-    except AssertionError:
-        return False
     except (ServerError, socket.error) as e:
         if debug:
             logger.debug('ServerError or socket.error exception raised (%s).', e)
