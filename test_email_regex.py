@@ -1,4 +1,14 @@
+from email_regex import get_domain_from_email_address
 from email_regex import email_has_valid_structure
+
+DOMAINS = {
+    "email@domain.com": "domain.com",                 
+    "email@subdomain.domain.com": "subdomain.domain.com",
+    "email@123.123.123.123": "123.123.123.123",
+    "email@[123.123.123.123]": "123.123.123.123",
+    "email@domain-one.com": "domain-one.com",
+    "email@domain.co.jp": "domain.co.jp",
+}
 
 VALID_EMAIL_ADDRESS_EXAMPLES = [
     "email@domain.com",                 # basic valid email
@@ -36,14 +46,25 @@ INVALID_EMAIL_ADDRESS_EXAMPLES = [
 ]
 
 
+def test_domain_from_email_address():
+    for email_address, domain in DOMAINS.items():
+        try:
+            domain_from_function = get_domain_from_email_address(email_address)
+            assert domain_from_function == domain
+        except AssertionError:
+            raise AssertionError(
+                "Email address {} should result in domain {} but resulted in domain {}"
+                    .format(email_address, domain, domain_from_function))
+
+
 def test_valid_email_structure_regex():
     for index, valid_email_address in enumerate(VALID_EMAIL_ADDRESS_EXAMPLES):
         try:
             assert email_has_valid_structure(valid_email_address) is True
         except AssertionError:
             raise AssertionError(
-                ("{} should be valid ({}th email address in the list)"
-                    .format(valid_email_address, index)))
+                "{} should be valid ({}th email address in the list)"
+                    .format(valid_email_address, index))
 
 def test_invalid_email_structure_regex():
     for index, invalid_email_address in enumerate(INVALID_EMAIL_ADDRESS_EXAMPLES):
@@ -51,5 +72,5 @@ def test_invalid_email_structure_regex():
             assert email_has_valid_structure(invalid_email_address) is False
         except AssertionError:
             raise AssertionError(
-                ("{} should be invalid ({}th email address in the list)"
-                    .format(invalid_email_address, index)))
+                "{} should be invalid ({}th email address in the list)"
+                    .format(invalid_email_address, index))
