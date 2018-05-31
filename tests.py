@@ -9,7 +9,7 @@ VALID_EMAIL_ADDRESS_EXAMPLES = [
     "email@[123.123.123.123]",          # square brackets around IP address
     "\"email\"@domain.com",             # quote marks in address fields
     "1234567890@domain.com",            # numbers in address field
-    "email@domain-one.com",              # dash in subdomain
+    "email@domain-one.com",             # dash in subdomain
     "_______@domain.com",               # underscore in address field
     "email@domain.name",                # .name top level domain name
     "email@domain.co.jp",               # dot in top level domain
@@ -17,22 +17,22 @@ VALID_EMAIL_ADDRESS_EXAMPLES = [
 ]
 
 INVALID_EMAIL_ADDRESS_EXAMPLES = [
-    "plainaddress",                     # Missing @ sign and domain,
-    "#@%^%#$@#$@#.com",                 # Garbage,
-    "@domain.com",                      # Missing username,
-    "Joe Smith <email@domain.com>",     # Encoded html within email is invalid,
-    "email.domain.com",                 # Missing @,
-    "email@domain@domain.com",          # Two @ sign,
-    ".email@domain.com",                # Leading dot in address is not allowed,
-    "email.@domain.com",                # Trailing dot in address is not allowed,
-    "email..email@domain.com",          # Multiple dots,
-    "あいうえお@domain.com",              # Unicode char as address,
-    "email@domain.com (Joe Smith)",     # Text followed email is not allowed,
-    "email@domain",                     # Missing top level domain (.com/.net/.org/etc),
-    "email@-domain.com",                # Leading dash in front of domain is invalid,
-    "email@domain.web",                 # .web is not a valid top level domain,
-    "email@111.222.333.44444",          # Invalid IP format,
-    "email@domain..com",                # Multiple dot in the domain portion is invalid
+    "plainaddress",                     # missing @ sign and domain
+    "#@%^%#$@#$@#.com",                 # garbage
+    "@domain.com",                      # missing username
+    "Joe Smith <email@domain.com>",     # encoded html within email is invalid
+    "email.domain.com",                 # missing @
+    "email@domain@domain.com",          # two @ sign
+    ".email@domain.com",                # leading dot in address is not allowed
+    "email.@domain.com",                # trailing dot in address is not allowed
+    "email..email@domain.com",          # multiple dots
+    "あいうえお@domain.com",              # unicode char as address
+    "email@domain.com (Joe Smith)",     # text followed email is not allowed
+    "email@domain",                     # missing top level domain (.com/.net/.org/etc)
+    "email@-domain.com",                # leading dash in front of domain is invalid
+    "email@domain.web",                 # .web is not a valid top level domain
+    "email@111.222.333.44444",          # invalid IP format
+    "email@domain..com",                # multiple dot in the domain portion is invalid
 ]
 
 
