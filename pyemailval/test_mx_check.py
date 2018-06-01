@@ -1,4 +1,4 @@
-from mx_check import _get_domain_from_email_address
+from .mx_check import _get_domain_from_email_address
 
 
 DOMAINS = {
@@ -14,7 +14,7 @@ DOMAINS = {
 def test_domain_from_email_address():
     for email_address, domain in DOMAINS.items():
         try:
-            domain_from_function = get_domain_from_email_address(email_address)
+            domain_from_function = _get_domain_from_email_address(email_address)
             assert domain_from_function == domain
         except AssertionError:
             raise AssertionError(

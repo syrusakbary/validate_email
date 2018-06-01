@@ -56,15 +56,6 @@ ADDR_SPEC = LOCAL_PART + r'@' + DOMAIN               # see 3.4.1
 VALID_ADDRESS_REGEXP = '^' + ADDR_SPEC + '$'
 
 
-def get_domain_from_email_address(email_address):
-    try:
-        return re.search(r"(?<=@)\[?([^\[\]]+)", email_address)[1]
-    except TypeError:
-        raise ValueError("Invalid email address")
-    except IndexError:
-        raise ValueError("Invalid email address")
-
-
 def regex_check(email_address):
     if any(ord(char) > 127 for char in email_address):
         return False

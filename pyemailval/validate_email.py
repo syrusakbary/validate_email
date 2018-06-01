@@ -1,5 +1,5 @@
-from regex_check import regex_check
-from mx_check import mx_check
+from .regex_check import regex_check
+from .mx_check import mx_check
 
 
 def validate_email(

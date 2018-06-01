@@ -1,4 +1,4 @@
-from regex_check import regex_check
+from .regex_check import regex_check
 
 VALID_EMAIL_ADDRESS_EXAMPLES = [
     "email@domain.com",                 # basic valid email
