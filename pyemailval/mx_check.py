@@ -23,10 +23,10 @@ def _get_mx_records(domain):
     return [str(x.exchange) for x in records]
 
 
-def mx_check(email_address, timeout=10):
+def mx_check(email_address, smtp_timeout=10):
     host = socket.gethostname()
 
-    smtp = smtplib.SMTP(timeout=timeout)
+    smtp = smtplib.SMTP(timeout=smtp_timeout)
     smtp.set_debuglevel(0)
 
     domain = _get_domain_from_email_address(email_address)

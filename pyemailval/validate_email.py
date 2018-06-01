@@ -4,14 +4,14 @@ from .mx_check import mx_check
 
 def validate_email(
         email_address,
-        regex_check=True,
-        mx_check=True,
+        check_regex=True,
+        check_mx=True,
         smtp_timeout=10):
 
-    if regex_check and not regex_check(email_address):
+    if check_regex and not regex_check(email_address):
         return False
 
-    if mx_check and not mx_check(email_address, smtp_timeout=smtp_timeout):
+    if check_mx and not mx_check(email_address, smtp_timeout=smtp_timeout):
         return False
 
     return True

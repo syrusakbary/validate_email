@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="pyemailval",
-    version="0.2",
+    version="0.4",
     py_modules=("pyemailval",),
     author="Ben Baert",
     author_email="ben_b@gmx.com",
