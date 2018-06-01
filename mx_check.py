@@ -15,15 +15,14 @@ def get_mx_records(domain):
     return [str(x.exchange) for x in records]
 
 
-def mx_check(email_address):
+def mx_check(email_address, timeout=10):
     host = socket.gethostname()
 
-    smtp = smtplib.SMTP()
+    smtp = smtplib.SMTP(timeout=timeout)
     smtp.set_debuglevel(0)
 
     domain = get_domain_from_email_address(email_address)
     mx_records = get_mx_records(domain)
-    print(mx_records)
 
     for mx_record in mx_records:
         smtp.connect(mx_record)

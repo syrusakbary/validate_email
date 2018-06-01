@@ -34,4 +34,4 @@ def validate_email(
     if not check_mx:
         return True
 
-    return mx_check(email_address)
+    return mx_check(email_address, timeout=smtp_timeout)
