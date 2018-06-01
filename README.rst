@@ -20,25 +20,10 @@ USAGE
 Basic usage::
 
     from pyemailval import validate_email
-    is_valid = validate_email('example@example.com')
+    is_valid = validate_email('example@example.com', check_regex=True, check_mx=True)
 
-
-Checking domain has SMTP Server
--------------------------------
-
-Check if the host has SMTP Server::
-
-    from validate_email import validate_email
-    is_valid = validate_email('example@example.com',check_mx=True)
-
-
-Verify email exists
--------------------
-
-Check if the host has SMTP Server and the email really exists::
-
-    from validate_email import validate_email
-    is_valid = validate_email('example@example.com',verify=True)
+check_regex will check will the email address has a valid structure and defaults to True
+check_mx will check the mx-records and check whether the email actually exists
 
 
 TODOs and BUGS
