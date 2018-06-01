@@ -1,11 +1,19 @@
+import re
 import socket
 import smtplib
 import dns.resolver as dns
 
-from email_regex import get_domain_from_email_address
+
+def _get_domain_from_email_address(email_address):
+    try:
+        return re.search(r"(?<=@)\[?([^\[\]]+)", email_address)[1]
+    except TypeError:
+        raise ValueError("Invalid email address")
+    except IndexError:
+        raise ValueError("Invalid email address")
 
 
-def get_mx_records(domain):
+def _get_mx_records(domain):
     try:
         records = dns.query(domain, 'MX')
     except dns.NXDOMAIN:
@@ -21,8 +29,8 @@ def mx_check(email_address, timeout=10):
     smtp = smtplib.SMTP(timeout=timeout)
     smtp.set_debuglevel(0)
 
-    domain = get_domain_from_email_address(email_address)
-    mx_records = get_mx_records(domain)
+    domain = _get_domain_from_email_address(email_address)
+    mx_records = _get_mx_records(domain)
 
     for mx_record in mx_records:
         smtp.connect(mx_record)

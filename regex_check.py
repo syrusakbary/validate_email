@@ -65,7 +65,7 @@ def get_domain_from_email_address(email_address):
         raise ValueError("Invalid email address")
 
 
-def email_has_valid_structure(email_address):
+def regex_check(email_address):
     if any(ord(char) > 127 for char in email_address):
         return False
     if re.match(VALID_ADDRESS_REGEXP, email_address):
