@@ -163,7 +163,7 @@ def validate_email(email, check_mx=False, verify=False, debug=False, smtp_timeou
                     smtp.quit()
                 except smtplib.SMTPServerDisconnected:  # Server not permits verify user
                     if debug:
-                        logger.debug(u'%s disconected.', mx[1])
+                        logger.debug(u'%s disconnected.', mx[1])
                 except smtplib.SMTPConnectError:
                     if debug:
                         logger.debug(u'Unable to connect to %s.', mx[1])
@@ -182,16 +182,10 @@ if __name__ == "__main__":
         email = raw_input('Enter email for validation: ')
 
         mx = raw_input('Validate MX record? [yN] ')
-        if mx.strip().lower() == 'y':
-            mx = True
-        else:
-            mx = False
+        mx = mx.strip().lower() == 'y'
 
         validate = raw_input('Try to contact server for address validation? [yN] ')
-        if validate.strip().lower() == 'y':
-            validate = True
-        else:
-            validate = False
+        validate = validate.strip().lower() == 'y'
 
         logging.basicConfig()
 
