@@ -65,6 +65,8 @@ class EmailValidator(object):
 
         if domain_part in self.domain_whitelist:
             return True
+        if domain_part in self.domain_blacklist:
+            return False
 
         if not self.validate_domain_part(domain_part):
             # Try for possible IDN domain-part
