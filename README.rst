@@ -7,7 +7,7 @@ py3-validate-email
 
 py3-validate-email is a package for Python that check if an email is valid, properly formatted and really exists.
 
-
+This module is for Python 3.6 and above!
 
 INSTALLATION
 ============
