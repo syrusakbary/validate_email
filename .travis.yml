@@ -4,11 +4,12 @@ python:
   - "3.5-dev"  # 3.5 development branch
   - "3.6"
   - "3.6-dev"  # 3.6 development branch
+  - "3.7"
   - "3.7-dev"  # 3.7 development branch
 # command to install dependencies
 install:
   - pip install -U pip wheel setuptools
-  - pip install requirements.txt
+  - pip install -r requirements.txt
   - pip install -e .
 # command to run tests
 script:
