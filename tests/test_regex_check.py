@@ -16,7 +16,7 @@ VALID_EMAIL_ADDRESS_EXAMPLES = [
     'firstname-lastname@domain.com'  # dash in address field
 ]
 
-INVALID_EMAIL_ADDRESS_EXAMPLES = [
+INVALID_EXAMPLES = [
     'plainaddress',  # missing @ sign and domain
     '#@%^%#$@#$@#.com',  # garbage
     '@domain.com',  # missing username
@@ -47,11 +47,10 @@ def test_valid_email_structure_regex():
 
 
 def test_invalid_email_structure_regex():
-    for index, invalid_email_address in \
-            enumerate(INVALID_EMAIL_ADDRESS_EXAMPLES):
+    for idx, invalid_email_address in enumerate(INVALID_EXAMPLES):
         try:
             assert regex_check(invalid_email_address) is False
         except AssertionError:
             raise AssertionError(
                 '{} should be invalid ({}th email address in the list)'
-                .format(invalid_email_address, index))
+                .format(invalid_email_address, idx))
