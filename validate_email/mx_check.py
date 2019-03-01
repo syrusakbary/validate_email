@@ -1,6 +1,7 @@
 import re
-import socket
 import smtplib
+import socket
+
 import dns.resolver as dns
 
 
@@ -18,7 +19,7 @@ def _get_mx_records(domain):
         records = dns.query(domain, 'MX')
     except dns.NXDOMAIN:
         raise ValueError("Domain {} does not seem to exist")
-    except:
+    except Exception:
         raise NotImplementedError("Feature not yet implemented")
     return [str(x.exchange) for x in records]
 

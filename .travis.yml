@@ -7,7 +7,11 @@ python:
   - "3.7-dev"  # 3.7 development branch
 # command to install dependencies
 install:
+  - pip install -U pip wheel setuptools
+  - pip install requirements.txt
   - pip install -e .
 # command to run tests
 script:
+  - isort --skip-glob=venv
+  - flake8 tests/ validate_email/
   - python -m unittest discover -v

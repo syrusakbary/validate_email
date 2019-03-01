@@ -1,16 +1,17 @@
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 setup(
-    name='pyemailval',
+    name='py3-validate-email',
     version='0.6',
-    py_modules=('pyemailval',),
+    py_modules=('validate_email',),
     install_requires=['dnspython'],
-    author='Ben Baert',
+    author='László Károlyi',
     author_email='laszlo@karolyi.hu',
-    description='pyemailval verifies if an email address really exists.',
+    description='Email validator with regex and SMTP checking.',
     long_description=open('README.rst').read(),
     keywords='email validation verification mx verify',
-    url='http://github.com/karolyi/pyemailval',
-    download_url='http://github.com/karolyi/pyemailval/archive/0.1.tar.gz',
+    url='http://github.com/karolyi/py3-validate-email',
+    download_url=(
+        'http://github.com/karolyi/py3-validate-email/archive/0.1.tar.gz'),
     license='LGPL',
 )

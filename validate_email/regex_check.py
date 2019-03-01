@@ -1,7 +1,7 @@
-from typing import Optional
-from re import compile as re_compile
-from re import IGNORECASE
 from ipaddress import IPv4Address, IPv6Address
+from re import IGNORECASE
+from re import compile as re_compile
+from typing import Optional
 
 SetOrNone = Optional[set]
 

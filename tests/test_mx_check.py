@@ -1,5 +1,6 @@
 from unittest.case import TestCase
-from pyemailval.mx_check import _get_domain_from_email_address
+
+from validate_email.mx_check import _get_domain_from_email_address
 
 DOMAINS = {
     'email@domain.com': 'domain.com',

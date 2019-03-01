@@ -1,5 +1,6 @@
-from pyemailval.regex_check import regex_check
 from unittest.case import TestCase
+
+from validate_email.regex_check import regex_check
 
 VALID_EXAMPLES = [
     'email@domain.com',  # basic valid email
