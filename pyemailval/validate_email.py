@@ -3,10 +3,7 @@ from .mx_check import mx_check
 
 
 def validate_email(
-        email_address,
-        check_regex=True,
-        check_mx=True,
-        smtp_timeout=10):
+        email_address, check_regex=True, check_mx=True, smtp_timeout=10):
 
     if check_regex and not regex_check(email_address):
         return False

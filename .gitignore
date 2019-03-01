@@ -3,3 +3,4 @@ build
 dist
 MANIFEST
 *.egg-info
+venv

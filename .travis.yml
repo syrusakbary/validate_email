@@ -9,7 +9,7 @@ python:
   - "3.7-dev"  # 3.7 development branch
 # command to install dependencies
 install:
-  - pip install -r requirements.txt
+  - pip install -e .
 # command to run tests
 script:
   - nosetests
