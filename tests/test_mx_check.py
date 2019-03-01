@@ -1,3 +1,4 @@
+from unittest.case import TestCase
 from pyemailval.mx_check import _get_domain_from_email_address
 
 DOMAINS = {
@@ -10,14 +11,9 @@ DOMAINS = {
 }
 
 
-def test_domain_from_email_address():
-    for email_address, domain in DOMAINS.items():
-        try:
-            domain_from_function = _get_domain_from_email_address(
-                email_address)
-            assert domain_from_function == domain
-        except AssertionError:
-            raise AssertionError(
-                'Email address {} should result in domain {} but resulted in '
-                'domain {}'.format(
-                    email_address, domain, domain_from_function))
+class MxTestCase(TestCase):
+
+    def test_domain_from_email_address(self):
+        for address, domain in DOMAINS.items():
+            domain_from_function = _get_domain_from_email_address(address)
+            self.assertEqual(domain_from_function, domain)

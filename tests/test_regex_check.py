@@ -1,6 +1,7 @@
 from pyemailval.regex_check import regex_check
+from unittest.case import TestCase
 
-VALID_EMAIL_ADDRESS_EXAMPLES = [
+VALID_EXAMPLES = [
     'email@domain.com',  # basic valid email
     'firstname.lastname@domain.com',  # dot in address field
     'email@subdomain.domain.com',  # dot in subdomain
@@ -30,27 +31,20 @@ INVALID_EXAMPLES = [
     'email@domain.com (Joe Smith)',  # text followed email is not allowed
     'email@domain',  # missing top level domain (.com/.net/.org/etc)
     'email@-domain.com',  # leading dash in front of domain is invalid
-    'email@domain.web',  # .web is not a valid top level domain
-    'email@111.222.333.44444',  # invalid IP format
     'email@domain..com',  # multiple dot in the domain portion is invalid
 ]
 
 
-def test_valid_email_structure_regex():
-    for index, valid_email_address in enumerate(VALID_EMAIL_ADDRESS_EXAMPLES):
-        try:
-            assert regex_check(valid_email_address) is True
-        except AssertionError:
-            raise AssertionError(
-                '{} should be valid ({}th email address in the list)'
-                .format(valid_email_address, index))
+class RegexTest(TestCase):
 
+    def test_valid_email_structure_regex(self):
+        for address in VALID_EXAMPLES:
+            self.assertTrue(
+                expr=regex_check(address),
+                msg=f'Check is not true with {address}')
 
-def test_invalid_email_structure_regex():
-    for idx, invalid_email_address in enumerate(INVALID_EXAMPLES):
-        try:
-            assert regex_check(invalid_email_address) is False
-        except AssertionError:
-            raise AssertionError(
-                '{} should be invalid ({}th email address in the list)'
-                .format(invalid_email_address, idx))
+    def test_invalid_email_structure_regex(self):
+        for address in INVALID_EXAMPLES:
+            self.assertFalse(
+                expr=regex_check(address),
+                msg=f'Check is true with {address}')

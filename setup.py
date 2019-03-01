@@ -4,7 +4,7 @@ setup(
     name='pyemailval',
     version='0.6',
     py_modules=('pyemailval',),
-    install_requires=['dnspython', 'nose'],
+    install_requires=['dnspython'],
     author='Ben Baert',
     author_email='laszlo@karolyi.hu',
     description='pyemailval verifies if an email address really exists.',
