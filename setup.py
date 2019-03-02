@@ -1,30 +1,33 @@
-from setuptools import setup
-from setuptools.command.develop import develop
-from setuptools.command.install import install
+from os.path import join
+from urllib.request import urlopen
+
+from setuptools import find_packages, setup
+from setuptools.command.build_py import build_py
+
+blacklist_url = (
+    'https://raw.githubusercontent.com/martenson/disposable-email-domains/'
+    'master/disposable_email_blocklist.conf')
 
 
-class PostDevelopCommand(develop):
-    'Post-installation for development mode'
-
-    def run(self):
-        super().run()
-        with open('/tmp/test-develop', 'w') as fd:
-            fd.write(str(vars(self)))
-
-
-class PostInstallCommand(install):
-    'Post-installation for installation mode'
+class PostBuildPyCommand(build_py):
+    'Post-installation for build_py'
 
     def run(self):
+        if self.dry_run:
+            return super().run()
+        with urlopen(url=blacklist_url) as fd:
+            content = fd.read().decode('utf-8')
+        target_dir = join(self.build_lib, 'validate_email/lib')
+        self.mkpath(target_dir)
+        with open(join(target_dir, 'blacklist.txt'), 'w') as fd:
+            fd.write(content)
         super().run()
-        with open('/tmp/test-install', 'w') as fd:
-            fd.write(str(vars(self)))
 
 
 setup(
     name='py3-validate-email',
     version='0.1',
-    py_modules=('validate_email',),
+    packages=find_packages(exclude=['tests']),
     install_requires=['dnspython'],
     author='László Károlyi',
     author_email='laszlo@karolyi.hu',
@@ -32,6 +35,6 @@ setup(
     long_description=open('README.rst').read(),
     keywords='email validation verification mx verify',
     url='http://github.com/karolyi/py3-validate-email',
-    cmdclass=dict(develop=PostDevelopCommand, install=PostInstallCommand),
+    cmdclass=dict(build_py=PostBuildPyCommand),
     license='LGPL',
 )

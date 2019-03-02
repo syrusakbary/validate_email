@@ -1,4 +1,5 @@
 from ipaddress import IPv4Address, IPv6Address
+from os.path import dirname, join
 from re import IGNORECASE
 from re import compile as re_compile
 from typing import Optional
@@ -51,10 +52,24 @@ class EmailValidator(object):
 
     def __init__(
             self, whitelist: SetOrNone = None, blacklist: SetOrNone = None):
-        self.domain_whitelist = whitelist or self.domain_whitelist
-        self.domain_blacklist = blacklist or self.domain_blacklist
+        self.domain_whitelist = set(whitelist) \
+            if whitelist else self.domain_whitelist
+        self._load_blacklist(blacklist=blacklist)
 
-    def __call__(self, value) -> bool:
+    def _load_blacklist(self, blacklist: SetOrNone = None):
+        'Load our blacklist.'
+        self.domain_blacklist = set(blacklist) \
+            if blacklist else self.domain_blacklist
+        path = join(dirname(__file__), 'lib', 'blacklist.txt')
+        try:
+            with open(path) as fd:
+                lines = fd.readlines()
+        except FileNotFoundError:
+            return
+        self.domain_blacklist = self.domain_blacklist.union(
+            x.strip() for x in lines)
+
+    def __call__(self, value: str, use_blacklist: bool) -> bool:
         if not value or '@' not in value:
             return False
 
