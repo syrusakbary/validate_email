@@ -29,7 +29,7 @@ Basic usage::
 `check_mx`: check the mx-records and check whether the email actually exists
 `from_address`: the email address the probe will be sent from,
 `smtp_timeout`: seconds until SMTP timeout
-`use_blacklist`: use the blacklist of domains downloaded from [https://githubusercontent.com/martenson/disposable-email-domains](https://raw.githubusercontent.com/martenson/disposable-email-domains)
+`use_blacklist`: use the blacklist of domains downloaded from https://githubusercontent.com/martenson/disposable-email-domains
 
 
 TODOs and BUGS
