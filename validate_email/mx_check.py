@@ -1,5 +1,5 @@
 from re import compile as re_compile
-from smtplib import SMTP
+from smtplib import SMTP, SMTPServerDisconnected
 from socket import gethostname
 from typing import Optional
 
@@ -27,7 +27,12 @@ def _get_mx_records(domain: str) -> list:
 
 def mx_check(
         email_address: str, from_address: Optional[str] = None,
-        smtp_timeout: int = 10) -> bool:
+        smtp_timeout: int = 10) -> Optional[bool]:
+    """
+    Return `True` if the host responds with a deliverable response code,
+    `False` if not-deliverable.
+    Also, return `None` if there was an error.
+    """
     from_address = from_address or email_address
     host = gethostname()
 
@@ -45,7 +50,10 @@ def mx_check(
         smtp.helo(host)
         smtp.mail(from_address)
         code, message = smtp.rcpt(email_address)
-        smtp.quit()
+        try:
+            smtp.quit()
+        except SMTPServerDisconnected:
+            return None
         if code == 250:
             return True
     return False

@@ -80,6 +80,7 @@ class EmailValidator(object):
 
         if domain_part in self.domain_whitelist:
             return True
+        print(domain_part, domain_part in self.domain_blacklist)
         if domain_part in self.domain_blacklist:
             return False
 
