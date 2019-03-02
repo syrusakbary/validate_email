@@ -1,3 +1,4 @@
+dnspython==1.16.0
 entrypoints==0.3
 flake8==3.7.7
 isort==4.3.9

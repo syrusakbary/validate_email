@@ -69,7 +69,7 @@ class EmailValidator(object):
         self.domain_blacklist = self.domain_blacklist.union(
             x.strip() for x in lines)
 
-    def __call__(self, value: str, use_blacklist: bool) -> bool:
+    def __call__(self, value: str, use_blacklist: bool = True) -> bool:
         if not value or '@' not in value:
             return False
 
