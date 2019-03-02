@@ -31,11 +31,11 @@ Basic usage::
 
 :code:`from_address`: the email address the probe will be sent from,
 
-:code:`helo_host`: the host to in SMTP HELO use when checking for an email,
+:code:`helo_host`: the host to use in SMTP HELO when checking for an email,
 
 :code:`smtp_timeout`: seconds until SMTP timeout
 
-:code:`use_blacklist`: use the blacklist of domains downloaded from https://githubusercontent.com/martenson/disposable-email-domains
+:code:`use_blacklist`: use the blacklist of domains downloaded from https://github.com/martenson/disposable-email-domains
 
 TODOs and BUGS
 ============================
