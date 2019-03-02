@@ -17,13 +17,11 @@ def _get_domain_from_email_address(email_address):
         raise ValueError('Invalid email address')
 
 
-def _get_mx_records(domain):
+def _get_mx_records(domain: str) -> list:
     try:
         records = dns.query(domain, 'MX')
     except dns.NXDOMAIN:
-        raise ValueError('Domain {} does not seem to exist')
-    except Exception:
-        raise NotImplementedError('Feature not yet implemented')
+        raise ValueError(f'Domain {domain} does not seem to exist')
     return [str(x.exchange) for x in records]
 
 
@@ -37,7 +35,10 @@ def mx_check(
     smtp.set_debuglevel(0)
 
     domain = _get_domain_from_email_address(email_address)
-    mx_records = _get_mx_records(domain)
+    try:
+        mx_records = _get_mx_records(domain)
+    except ValueError:
+        return False
 
     for mx_record in mx_records:
         smtp.connect(mx_record)
