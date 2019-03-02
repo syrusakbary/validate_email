@@ -26,15 +26,16 @@ def _get_mx_records(domain: str) -> list:
 
 
 def mx_check(
-        email_address: str, from_address: Optional[str] = None,
-        smtp_timeout: int = 10) -> Optional[bool]:
+    email_address: str, from_address: Optional[str] = None,
+    helo_host: Optional[str] = None, smtp_timeout: int = 10
+) -> Optional[bool]:
     """
     Return `True` if the host responds with a deliverable response code,
     `False` if not-deliverable.
     Also, return `None` if there was an error.
     """
     from_address = from_address or email_address
-    host = gethostname()
+    host = helo_host or gethostname()
 
     smtp = SMTP(timeout=smtp_timeout)
     smtp.set_debuglevel(0)
