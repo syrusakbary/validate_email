@@ -25,12 +25,15 @@ Basic usage::
     from validate_email import validate_email
     is_valid = validate_email(email_address='example@example.com', check_regex=True, check_mx=True, from_address='my@from.addr.ess', smtp_timeout=10, use_blacklist=True)
 
-`check_regex` will check will the email address has a valid structure and defaults to True
-`check_mx`: check the mx-records and check whether the email actually exists
-`from_address`: the email address the probe will be sent from,
-`smtp_timeout`: seconds until SMTP timeout
-`use_blacklist`: use the blacklist of domains downloaded from https://githubusercontent.com/martenson/disposable-email-domains
+:code:`check_regex` will check will the email address has a valid structure and defaults to True
 
+:code:`check_mx`: check the mx-records and check whether the email actually exists
+
+:code:`from_address`: the email address the probe will be sent from,
+
+:code:`smtp_timeout`: seconds until SMTP timeout
+
+:code:`use_blacklist`: use the blacklist of domains downloaded from https://githubusercontent.com/martenson/disposable-email-domains
 
 TODOs and BUGS
 ============================
