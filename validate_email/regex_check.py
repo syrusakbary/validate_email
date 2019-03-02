@@ -78,9 +78,10 @@ class EmailValidator(object):
         if not self.user_regex.match(user_part):
             return False
 
+        print('X1', domain_part, domain_part in self.domain_blacklist)
         if domain_part in self.domain_whitelist:
             return True
-        print(domain_part, domain_part in self.domain_blacklist)
+        print('X2', domain_part, domain_part in self.domain_blacklist)
         if domain_part in self.domain_blacklist:
             return False
 
