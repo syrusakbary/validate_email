@@ -33,6 +33,7 @@ setup(
     author_email='laszlo@karolyi.hu',
     description='Email validator with regex and SMTP checking.',
     long_description=open('README.rst').read(),
+    long_description_content_type='text/x-rst',
     keywords='email validation verification mx verify',
     url='http://github.com/karolyi/py3-validate-email',
     cmdclass=dict(build_py=PostBuildPyCommand),
