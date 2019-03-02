@@ -1,6 +1,7 @@
 from re import compile as re_compile
 from smtplib import SMTP
 from socket import gethostname
+from typing import Optional
 
 import dns.resolver as dns
 
@@ -26,7 +27,10 @@ def _get_mx_records(domain):
     return [str(x.exchange) for x in records]
 
 
-def mx_check(email_address, smtp_timeout=10):
+def mx_check(
+        email_address: str, from_address: Optional[str] = None,
+        smtp_timeout: int = 10) -> bool:
+    from_address = from_address or email_address
     host = gethostname()
 
     smtp = SMTP(timeout=smtp_timeout)
@@ -38,7 +42,7 @@ def mx_check(email_address, smtp_timeout=10):
     for mx_record in mx_records:
         smtp.connect(mx_record)
         smtp.helo(host)
-        smtp.mail(email_address)
+        smtp.mail(from_address)
         code, message = smtp.rcpt(email_address)
         smtp.quit()
         return True
