@@ -45,7 +45,6 @@ def mx_check(
         smtp.mail(from_address)
         code, message = smtp.rcpt(email_address)
         smtp.quit()
-        return True
         if code == 250:
             return True
     return False
