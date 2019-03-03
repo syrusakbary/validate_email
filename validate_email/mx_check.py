@@ -3,7 +3,7 @@ from smtplib import SMTP, SMTPServerDisconnected
 from socket import gethostname
 from typing import Optional
 
-import dns.resolver as dns
+from dns.resolver import NXDOMAIN, NoAnswer, query
 
 DOMAIN_REGEX = re_compile(r'(?<=@)\[?([^\[\]]+)')
 
@@ -19,9 +19,11 @@ def _get_domain_from_email_address(email_address):
 
 def _get_mx_records(domain: str) -> list:
     try:
-        records = dns.query(domain, 'MX')
-    except dns.NXDOMAIN:
+        records = query(domain, 'MX')
+    except NXDOMAIN:
         raise ValueError(f'Domain {domain} does not seem to exist')
+    except NoAnswer:
+        raise ValueError(f'Domain {domain} does not have an MX record')
     return [str(x.exchange) for x in records]
 
 

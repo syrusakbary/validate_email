@@ -1,2 +1,5 @@
+0.1.4:
+- Handle 'No MX record' exception
+
 0.1.3:
 - Added ambigious (4xx) response code handling
