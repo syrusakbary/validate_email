@@ -57,4 +57,8 @@ def mx_check(
             return None
         if code == 250:
             return True
+        if 400 <= code <= 499:
+            # Ambigious return code, can be graylist, or temporary
+            # problems
+            return None
     return False
