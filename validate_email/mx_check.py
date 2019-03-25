@@ -1,5 +1,6 @@
 from re import compile as re_compile
 from smtplib import SMTP, SMTPServerDisconnected
+from socket import error as SocketError
 from socket import gethostname
 from typing import Optional
 
@@ -49,7 +50,10 @@ def mx_check(
         return False
 
     for mx_record in mx_records:
-        smtp.connect(mx_record)
+        try:
+            smtp.connect(mx_record)
+        except SocketError:
+            continue
         smtp.helo(host)
         smtp.mail(from_address)
         code, message = smtp.rcpt(email_address)
