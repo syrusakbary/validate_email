@@ -34,10 +34,10 @@ def _check_mx_records(
 ) -> bool:
     'Check the mx records for a given email address.'
     smtp = SMTP(timeout=smtp_timeout)
-    smtp.set_debuglevel(0)
+    smtp.set_debuglevel(debuglevel=0)
     for mx_record in mx_records:
         try:
-            smtp.connect(mx_record)
+            smtp.connect(host=mx_record)
         except SocketError:
             continue
         smtp.helo(name=helo_host)
