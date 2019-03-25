@@ -50,8 +50,8 @@ def _check_mx_records(
         if code == 250:
             return True
         if 400 <= code <= 499:
-            # Ambigious return code, can be graylist, or temporary
-            # problems
+            # Ambigious return code, can be graylist, temporary
+            # problems, quota or mailsystem error
             return None
     return False
 
@@ -63,7 +63,8 @@ def mx_check(
     """
     Return `True` if the host responds with a deliverable response code,
     `False` if not-deliverable.
-    Also, return `None` if there was an error.
+    Also, return `None` if there if couldn't provide a conclusive result
+    (e.g. temporary errors or graylisting).
     """
     from_address = from_address or email_address
     host = helo_host or gethostname()
