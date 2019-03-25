@@ -28,35 +28,21 @@ def _get_mx_records(domain: str) -> list:
     return [str(x.exchange) for x in records]
 
 
-def mx_check(
-    email_address: str, from_address: Optional[str] = None,
-    helo_host: Optional[str] = None, smtp_timeout: int = 10
-) -> Optional[bool]:
-    """
-    Return `True` if the host responds with a deliverable response code,
-    `False` if not-deliverable.
-    Also, return `None` if there was an error.
-    """
-    from_address = from_address or email_address
-    host = helo_host or gethostname()
-
+def _check_mx_records(
+    mx_records: list, smtp_timeout: int, helo_host: str, from_address: str,
+    email_address: str
+) -> bool:
+    'Check the mx records for a given email address.'
     smtp = SMTP(timeout=smtp_timeout)
     smtp.set_debuglevel(0)
-
-    domain = _get_domain_from_email_address(email_address)
-    try:
-        mx_records = _get_mx_records(domain)
-    except ValueError:
-        return False
-
     for mx_record in mx_records:
         try:
             smtp.connect(mx_record)
         except SocketError:
             continue
-        smtp.helo(host)
-        smtp.mail(from_address)
-        code, message = smtp.rcpt(email_address)
+        smtp.helo(name=helo_host)
+        smtp.mail(sender=from_address)
+        code, message = smtp.rcpt(recip=email_address)
         try:
             smtp.quit()
         except SMTPServerDisconnected:
@@ -68,3 +54,24 @@ def mx_check(
             # problems
             return None
     return False
+
+
+def mx_check(
+    email_address: str, from_address: Optional[str] = None,
+    helo_host: Optional[str] = None, smtp_timeout: int = 10
+) -> Optional[bool]:
+    """
+    Return `True` if the host responds with a deliverable response code,
+    `False` if not-deliverable.
+    Also, return `None` if there was an error.
+    """
+    from_address = from_address or email_address
+    host = helo_host or gethostname()
+    domain = _get_domain_from_email_address(email_address)
+    try:
+        mx_records = _get_mx_records(domain)
+    except ValueError:
+        return False
+    return _check_mx_records(
+        mx_records=mx_records, smtp_timeout=smtp_timeout, helo_host=host,
+        from_address=from_address, email_address=email_address)
