@@ -31,7 +31,7 @@ def _get_mx_records(domain: str) -> list:
 def _check_mx_records(
     mx_records: list, smtp_timeout: int, helo_host: str, from_address: str,
     email_address: str
-) -> bool:
+) -> Optional[bool]:
     'Check the mx records for a given email address.'
     smtp = SMTP(timeout=smtp_timeout)
     smtp.set_debuglevel(debuglevel=0)
