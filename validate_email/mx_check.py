@@ -4,14 +4,14 @@ from socket import error as SocketError
 from socket import gethostname
 from typing import Optional
 
-from dns.resolver import NXDOMAIN, NoAnswer, query
-
-DOMAIN_REGEX = re_compile(r'(?<=@)\[?([^\[\]]+)')
+from dns.rdtypes.ANY.MX import MX
+from dns.resolver import NXDOMAIN, NoAnswer, query, Answer
+from .constants import EMAIL_EXTRACT_HOST_REGEX, HOST_REGEX
 
 
 def _get_domain_from_email_address(email_address):
     try:
-        return DOMAIN_REGEX.search(string=email_address)[1]
+        return EMAIL_EXTRACT_HOST_REGEX.search(string=email_address)[1]
     except TypeError:
         raise ValueError('Invalid email address')
     except IndexError:
@@ -19,13 +19,21 @@ def _get_domain_from_email_address(email_address):
 
 
 def _get_mx_records(domain: str) -> list:
+    'Return a list of hostnames in the MX record.'
     try:
-        records = query(domain, 'MX')
+        records = query(domain, 'MX')  # type: Answer
     except NXDOMAIN:
         raise ValueError(f'Domain {domain} does not seem to exist')
     except NoAnswer:
         raise ValueError(f'Domain {domain} does not have an MX record')
-    return [str(x.exchange) for x in records]
+    to_check = dict()
+    for record in records:  # type: MX
+        dns_str = record.exchange.to_text()  # type: str
+        to_check[dns_str] = dns_str[:-1] if dns_str.endswith('.') else dns_str
+    result = [k for k, v in to_check.items() if HOST_REGEX.search(string=v)]
+    if not len(result):
+        raise ValueError(f'Domain {domain} does not have a valid MX record')
+    return result
 
 
 def _check_mx_records(
