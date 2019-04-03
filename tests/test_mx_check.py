@@ -66,10 +66,10 @@ class GetMxRecordsTestCase(TestCase):
     def test_filters_out_invalid_hostnames(self):
         'Returns only the valid hostnames.'
         TEST_QUERY.return_value = [
-            SimpleNamespace(exchange=DnsNameStub(value='asdqwe')),
+            SimpleNamespace(exchange=DnsNameStub(value='asdqwe.')),
             SimpleNamespace(exchange=DnsNameStub(value='.')),
-            SimpleNamespace(exchange=DnsNameStub(value='valid.host')),
-            SimpleNamespace(exchange=DnsNameStub(value='valid2.host')),
+            SimpleNamespace(exchange=DnsNameStub(value='valid.host.')),
+            SimpleNamespace(exchange=DnsNameStub(value='valid2.host.')),
         ]
         result = _get_mx_records(domain='testdomain3')
-        self.assertListEqual(result, ['valid.host', 'valid2.host'])
+        self.assertListEqual(result, ['valid.host.', 'valid2.host.'])
