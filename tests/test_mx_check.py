@@ -1,9 +1,10 @@
+from types import SimpleNamespace
 from unittest.case import TestCase
 from unittest.mock import Mock, patch
-from types import SimpleNamespace
 
 from validate_email import mx_check as mx_module
-from validate_email.mx_check import _get_domain_from_email_address, _get_mx_records
+from validate_email.mx_check import (
+    _get_domain_from_email_address, _get_mx_records)
 
 DOMAINS = {
     'email@domain.com': 'domain.com',
@@ -36,7 +37,7 @@ class DomainTestCase(TestCase):
             self.assertEqual(domain_from_function, domain)
 
 
-class GetMxRecordsTest(TestCase):
+class GetMxRecordsTestCase(TestCase):
     'Testing `_get_mx_records`.'
 
     @patch.object(target=mx_module, attribute='query', new=TEST_QUERY)

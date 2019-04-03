@@ -1,11 +1,11 @@
-from re import compile as re_compile
 from smtplib import SMTP, SMTPServerDisconnected
 from socket import error as SocketError
 from socket import gethostname
 from typing import Optional
 
 from dns.rdtypes.ANY.MX import MX
-from dns.resolver import NXDOMAIN, NoAnswer, query, Answer
+from dns.resolver import NXDOMAIN, Answer, NoAnswer, query
+
 from .constants import EMAIL_EXTRACT_HOST_REGEX, HOST_REGEX
 
 

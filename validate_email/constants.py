@@ -1,5 +1,5 @@
-from re import compile as re_compile
 from re import IGNORECASE
+from re import compile as re_compile
 
 HOST_REGEX = re_compile(
     # max length for domain name labels is 63 characters per RFC 1034
