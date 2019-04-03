@@ -1,5 +1,10 @@
+0.1.6:
+- Fixed a rare case where aol.co returns '.' in MX that causes an
+  exception for the SMTP module, with added tests.
+
 0.1.5:
-- Handle socket errors (https://docs.python.org/3/library/socket.html#exceptions)
+- Handle socket errors (https://docs.python.org/3/library/
+  socket.html#exceptions)
 
 0.1.4:
 - Handle 'No MX record' exception
