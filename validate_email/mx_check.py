@@ -43,25 +43,27 @@ def _check_mx_records(
     'Check the mx records for a given email address.'
     smtp = SMTP(timeout=smtp_timeout)
     smtp.set_debuglevel(debuglevel=0)
+    answers = set()
     for mx_record in mx_records:
         try:
             smtp.connect(host=mx_record)
-        except SocketError:
-            continue
-        smtp.helo(name=helo_host)
-        smtp.mail(sender=from_address)
-        code, message = smtp.rcpt(recip=email_address)
-        try:
+            smtp.helo(name=helo_host)
+            smtp.mail(sender=from_address)
+            code, message = smtp.rcpt(recip=email_address)
             smtp.quit()
         except SMTPServerDisconnected:
-            return None
+            answers.add(None)
+            continue
+        except SocketError:
+            answers.add(False)
+            continue
         if code == 250:
             return True
         if 400 <= code <= 499:
             # Ambigious return code, can be graylist, temporary
             # problems, quota or mailsystem error
-            return None
-    return False
+            answers.add(None)
+    return None if None in answers else False
 
 
 def mx_check(

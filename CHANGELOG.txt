@@ -1,3 +1,7 @@
+0.1.7:
+- Handle the SMTPServerDisconnected exception throughout all the SMTP
+  connection. Try to contact all MXes for a successful probe.
+
 0.1.6:
 - Fixed a rare case where aol.co returns '.' in MX that causes an
   exception for the SMTP module, with added tests.
