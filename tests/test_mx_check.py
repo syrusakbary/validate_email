@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 
 from validate_email import mx_check as mx_module
 from validate_email.mx_check import (
-    _get_domain_from_email_address, _get_mx_records)
+    _dissect_email, _get_idna_address, _get_mx_records)
 
 DOMAINS = {
     'email@domain.com': 'domain.com',
@@ -33,8 +33,24 @@ class DomainTestCase(TestCase):
 
     def test_domain_from_email_address(self):
         for address, domain in DOMAINS.items():
-            domain_from_function = _get_domain_from_email_address(address)
+            _user, domain_from_function = _dissect_email(email_address=address)
             self.assertEqual(domain_from_function, domain)
+
+
+class IdnaTestCase(TestCase):
+    'Testing IDNA converting.'
+
+    def test_resolves_idna_domains(self):
+        'Resolves email@motörhéád.com.'
+        self.assertEqual(
+            first=_get_idna_address(email_address='email@motörhéád.com'),
+            second='email@xn--motrhd-tta7d3f.com')
+
+    def test_resolves_conventional_domains(self):
+        'Resolves email@address.com.'
+        self.assertEqual(
+            first=_get_idna_address(email_address='email@address.com'),
+            second='email@address.com')
 
 
 class GetMxRecordsTestCase(TestCase):

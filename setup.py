@@ -28,7 +28,7 @@ setup(
     name='py3-validate-email',
     version='0.1.7',
     packages=find_packages(exclude=['tests']),
-    install_requires=['dnspython'],
+    install_requires=['dnspython==1.16.0', 'idna==2.8'],
     author='László Károlyi',
     author_email='laszlo@karolyi.hu',
     description='Email validator with regex and SMTP checking.',

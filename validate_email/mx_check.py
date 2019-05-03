@@ -1,27 +1,41 @@
+from functools import lru_cache
 from smtplib import SMTP, SMTPServerDisconnected
 from socket import error as SocketError
 from socket import gethostname
-from typing import Optional
+from typing import Optional, Tuple
 
+from dns.rdatatype import MX as rdtype_mx
 from dns.rdtypes.ANY.MX import MX
 from dns.resolver import NXDOMAIN, Answer, NoAnswer, query
+from idna.core import encode
 
 from .constants import EMAIL_EXTRACT_HOST_REGEX, HOST_REGEX
 
 
-def _get_domain_from_email_address(email_address):
+@lru_cache(maxsize=10)
+def _dissect_email(email_address: str) -> Tuple[str, str]:
+    'Return a tuple of the user and domain part.'
     try:
-        return EMAIL_EXTRACT_HOST_REGEX.search(string=email_address)[1]
+        domain = EMAIL_EXTRACT_HOST_REGEX.search(string=email_address)[1]
     except TypeError:
         raise ValueError('Invalid email address')
     except IndexError:
         raise ValueError('Invalid email address')
+    return email_address[:-(len(domain) + 1)], domain
+
+
+@lru_cache(maxsize=10)
+def _get_idna_address(email_address: str) -> str:
+    'Return an IDNA converted email address.'
+    user, domain = _dissect_email(email_address=email_address)
+    idna_resolved_domain = encode(s=domain).decode('ascii')
+    return f'{user}@{idna_resolved_domain}'
 
 
 def _get_mx_records(domain: str) -> list:
     'Return a list of hostnames in the MX record.'
     try:
-        records = query(domain, 'MX')  # type: Answer
+        records = query(qname=domain, rdtype=rdtype_mx)  # type: Answer
     except NXDOMAIN:
         raise ValueError(f'Domain {domain} does not seem to exist')
     except NoAnswer:
@@ -76,13 +90,14 @@ def mx_check(
     Also, return `None` if there if couldn't provide a conclusive result
     (e.g. temporary errors or graylisting).
     """
-    from_address = from_address or email_address
     host = helo_host or gethostname()
-    domain = _get_domain_from_email_address(email_address)
+    idna_from = _get_idna_address(email_address=from_address or email_address)
+    idna_to = _get_idna_address(email_address=email_address)
+    _user, domain = _dissect_email(email_address=email_address)
     try:
-        mx_records = _get_mx_records(domain)
+        mx_records = _get_mx_records(domain=domain)
     except ValueError:
         return False
     return _check_mx_records(
         mx_records=mx_records, smtp_timeout=smtp_timeout, helo_host=host,
-        from_address=from_address, email_address=email_address)
+        from_address=idna_from, email_address=idna_to)
