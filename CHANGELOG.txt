@@ -1,5 +1,6 @@
 0.1.8:
-- Added IDNA domain handling.
+- Added IDNA domain handling. (might need adjustment when
+  https://bugs.python.org/issue20083 gets fixed)
 
 0.1.7:
 - Handle the SMTPServerDisconnected exception throughout all the SMTP
