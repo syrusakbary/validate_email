@@ -4,9 +4,11 @@ from socket import error as SocketError
 from socket import gethostname
 from typing import Optional, Tuple
 
+from dns.exception import Timeout
 from dns.rdatatype import MX as rdtype_mx
 from dns.rdtypes.ANY.MX import MX
-from dns.resolver import NXDOMAIN, Answer, NoAnswer, query
+from dns.resolver import NXDOMAIN, YXDOMAIN, Answer, NoAnswer, query
+
 from idna.core import encode
 
 from .constants import EMAIL_EXTRACT_HOST_REGEX, HOST_REGEX
@@ -32,14 +34,23 @@ def _get_idna_address(email_address: str) -> str:
     return f'{user}@{idna_resolved_domain}'
 
 
-def _get_mx_records(domain: str) -> list:
-    'Return a list of hostnames in the MX record.'
+def _get_mx_records(domain: str, timeout: int) -> list:
+    """
+    Return a list of hostnames in the MX record, raise `ValueError` on
+    any issues.
+    """
     try:
-        records = query(qname=domain, rdtype=rdtype_mx)  # type: Answer
+        records = query(
+            qname=domain, rdtype=rdtype_mx, lifetime=timeout)  # type: Answer
     except NXDOMAIN:
         raise ValueError(f'Domain {domain} does not seem to exist')
     except NoAnswer:
         raise ValueError(f'Domain {domain} does not have an MX record')
+    except Timeout:
+        raise ValueError(f'{domain} DNS resolve timed out')
+    except YXDOMAIN:
+        raise ValueError(
+            'The DNS query name is too long after DNAME substitution.')
     to_check = dict()
     for record in records:  # type: MX
         dns_str = record.exchange.to_text()  # type: str
@@ -82,7 +93,8 @@ def _check_mx_records(
 
 def mx_check(
     email_address: str, from_address: Optional[str] = None,
-    helo_host: Optional[str] = None, smtp_timeout: int = 10
+    helo_host: Optional[str] = None, smtp_timeout: int = 10,
+    dns_timeout: int = 10
 ) -> Optional[bool]:
     """
     Return `True` if the host responds with a deliverable response code,
@@ -95,7 +107,7 @@ def mx_check(
     idna_to = _get_idna_address(email_address=email_address)
     _user, domain = _dissect_email(email_address=email_address)
     try:
-        mx_records = _get_mx_records(domain=domain)
+        mx_records = _get_mx_records(domain=domain, timeout=dns_timeout)
     except ValueError:
         return False
     return _check_mx_records(

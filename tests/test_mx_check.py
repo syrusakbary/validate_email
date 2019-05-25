@@ -1,6 +1,7 @@
 from types import SimpleNamespace
 from unittest.case import TestCase
 from unittest.mock import Mock, patch
+from dns.exception import Timeout
 
 from validate_email import mx_check as mx_module
 from validate_email.mx_check import (
@@ -62,7 +63,7 @@ class GetMxRecordsTestCase(TestCase):
         TEST_QUERY.return_value = [
             SimpleNamespace(exchange=DnsNameStub(value='.'))]
         with self.assertRaises(ValueError) as exc:
-            _get_mx_records(domain='testdomain1')
+            _get_mx_records(domain='testdomain1', timeout=10)
         self.assertEqual(
             exc.exception.args[0],
             'Domain testdomain1 does not have a valid MX record')
@@ -73,7 +74,7 @@ class GetMxRecordsTestCase(TestCase):
         TEST_QUERY.return_value = [
             SimpleNamespace(exchange=DnsNameStub(value='asdqwe'))]
         with self.assertRaises(ValueError) as exc:
-            _get_mx_records(domain='testdomain2')
+            _get_mx_records(domain='testdomain2', timeout=10)
         self.assertEqual(
             exc.exception.args[0],
             'Domain testdomain2 does not have a valid MX record')
@@ -87,5 +88,14 @@ class GetMxRecordsTestCase(TestCase):
             SimpleNamespace(exchange=DnsNameStub(value='valid.host.')),
             SimpleNamespace(exchange=DnsNameStub(value='valid2.host.')),
         ]
-        result = _get_mx_records(domain='testdomain3')
+        result = _get_mx_records(domain='testdomain3', timeout=10)
         self.assertListEqual(result, ['valid.host.', 'valid2.host.'])
+
+    @patch.object(target=mx_module, attribute='query', new=TEST_QUERY)
+    def test_raises_valueerror_on_dns_exception(self):
+        'Raises `ValueError` on DNS exception.'
+        TEST_QUERY.side_effect = Timeout()
+        with self.assertRaises(ValueError) as exc:
+            _get_mx_records(domain='testdomain3', timeout=10)
+        self.assertEqual(
+            exc.exception.args[0], 'testdomain3 DNS resolve timed out')
