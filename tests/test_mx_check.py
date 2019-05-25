@@ -1,6 +1,7 @@
 from types import SimpleNamespace
 from unittest.case import TestCase
 from unittest.mock import Mock, patch
+
 from dns.exception import Timeout
 
 from validate_email import mx_check as mx_module

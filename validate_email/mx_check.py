@@ -8,7 +8,6 @@ from dns.exception import Timeout
 from dns.rdatatype import MX as rdtype_mx
 from dns.rdtypes.ANY.MX import MX
 from dns.resolver import NXDOMAIN, YXDOMAIN, Answer, NoAnswer, query
-
 from idna.core import encode
 
 from .constants import EMAIL_EXTRACT_HOST_REGEX, HOST_REGEX
