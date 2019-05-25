@@ -7,7 +7,7 @@ from typing import Optional, Tuple
 from dns.exception import Timeout
 from dns.rdatatype import MX as rdtype_mx
 from dns.rdtypes.ANY.MX import MX
-from dns.resolver import NXDOMAIN, YXDOMAIN, Answer, NoAnswer, query
+from dns.resolver import NXDOMAIN, YXDOMAIN, Answer, NoAnswer, query, NoNameservers
 from idna.core import encode
 
 from .constants import EMAIL_EXTRACT_HOST_REGEX, HOST_REGEX
@@ -50,6 +50,8 @@ def _get_mx_records(domain: str, timeout: int) -> list:
     except YXDOMAIN:
         raise ValueError(
             'The DNS query name is too long after DNAME substitution.')
+    except NoNameservers:
+        raise ValueError('No nameservers responded in time.')
     to_check = dict()
     for record in records:  # type: MX
         dns_str = record.exchange.to_text()  # type: str
