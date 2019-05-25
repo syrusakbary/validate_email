@@ -35,7 +35,7 @@ Basic usage::
 
 :code:`smtp_timeout`: seconds until SMTP timeout
 
-:code:`dns_timeout`: seconds until SMTP timeout
+:code:`dns_timeout`: seconds until DNS timeout
 
 :code:`use_blacklist`: use the blacklist of domains downloaded from https://github.com/martenson/disposable-email-domains
 
