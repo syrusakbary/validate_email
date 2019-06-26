@@ -55,6 +55,7 @@ class IdnaTestCase(TestCase):
             second='email@address.com')
 
 
+
 class GetMxRecordsTestCase(TestCase):
     'Testing `_get_mx_records`.'
 
@@ -100,3 +101,8 @@ class GetMxRecordsTestCase(TestCase):
             _get_mx_records(domain='testdomain3', timeout=10)
         self.assertEqual(
             exc.exception.args[0], 'testdomain3 DNS resolve timed out')
+
+    def test_returns_false_on_idna_failure(self):
+        'Returns `False` on IDNA failure.'
+        self.assertFalse(expr=mx_module.mx_check(
+            email_address='test@♥web.de', from_address='mail@example.com'))

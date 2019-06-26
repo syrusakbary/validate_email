@@ -9,7 +9,7 @@ from dns.rdatatype import MX as rdtype_mx
 from dns.rdtypes.ANY.MX import MX
 from dns.resolver import (
     NXDOMAIN, YXDOMAIN, Answer, NoAnswer, NoNameservers, query)
-from idna.core import encode
+from idna.core import encode, IDNAError
 
 from .constants import EMAIL_EXTRACT_HOST_REGEX, HOST_REGEX
 
@@ -106,7 +106,10 @@ def mx_check(
     """
     host = helo_host or gethostname()
     idna_from = _get_idna_address(email_address=from_address or email_address)
-    idna_to = _get_idna_address(email_address=email_address)
+    try:
+        idna_to = _get_idna_address(email_address=email_address)
+    except IDNAError:
+        return False
     _user, domain = _dissect_email(email_address=email_address)
     try:
         mx_records = _get_mx_records(domain=domain, timeout=dns_timeout)
