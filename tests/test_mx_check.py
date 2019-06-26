@@ -55,7 +55,6 @@ class IdnaTestCase(TestCase):
             second='email@address.com')
 
 
-
 class GetMxRecordsTestCase(TestCase):
     'Testing `_get_mx_records`.'
 
