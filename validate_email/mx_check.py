@@ -9,7 +9,7 @@ from dns.rdatatype import MX as rdtype_mx
 from dns.rdtypes.ANY.MX import MX
 from dns.resolver import (
     NXDOMAIN, YXDOMAIN, Answer, NoAnswer, NoNameservers, query)
-from idna.core import encode, IDNAError
+from idna.core import IDNAError, encode
 
 from .constants import EMAIL_EXTRACT_HOST_REGEX, HOST_REGEX
 
