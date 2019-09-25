@@ -109,7 +109,7 @@ def get_mx_ip(hostname):
     return MX_DNS_CACHE[hostname]
 
 
-def validate_email(email, check_mx=False, verify=False, debug=False, smtp_timeout=10):
+def validate_email(email, check_mx=False, verify=False, debug=False, check_tls=False, smtp_timeout=10):
     """Indicate whether the given string is a valid email address
     according to the 'addr-spec' portion of RFC 2822 (see section
     3.4.1).  Parts of the spec that are marked obsolete are *not*
@@ -140,6 +140,15 @@ def validate_email(email, check_mx=False, verify=False, debug=False, smtp_timeou
                         return MX_CHECK_CACHE[mx[1]]
                     smtp = smtplib.SMTP(timeout=smtp_timeout)
                     smtp.connect(mx[1])
+                    if check_tls:
+                        try:
+                            smtp.starttls()
+                        except RuntimeError:
+                            # no ssl in python. So simply ignore
+                            pass
+                        except (smtplib.SMTPException, smtplib.SMTPResponseException):
+                            # failed to establish secure connection
+                            return False
                     MX_CHECK_CACHE[mx[1]] = True
                     if not verify:
                         try:
