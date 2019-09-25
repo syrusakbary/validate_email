@@ -1,5 +1,7 @@
 .. image:: https://travis-ci.org/karolyi/py3-validate-email.svg?branch=master
     :target: https://travis-ci.org/karolyi/py3-validate-email
+.. image:: https://bmc-cdn.nyc3.digitaloceanspaces.com/BMC-button-images/custom_images/orange_img.png
+    :target: https://www.buymeacoffee.com/t159YOryp
 
 ============================
 py3-validate-email
