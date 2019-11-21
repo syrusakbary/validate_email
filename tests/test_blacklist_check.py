@@ -39,6 +39,7 @@ class BlacklistCheckTestCase(TestCase):
         'Disallows blacklist item: mailinator.com.'
         dl = DlBlacklist()
         dl.run()
+        domainlist_check._load_builtin_blacklist()
         self.assertFalse(expr=domainlist_check(
             email_address='pa2@mailinator.com'))
         self.assertFalse(expr=validate_email(
