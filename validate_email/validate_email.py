@@ -1,5 +1,6 @@
 from typing import Optional
 
+from .domainlist_check import domainlist_check
 from .mx_check import mx_check
 from .regex_check import regex_check
 
@@ -15,8 +16,9 @@ def validate_email(
 
     Return `None` if the result is ambigious.
     """
-    if check_regex and not regex_check(
-            value=email_address, use_blacklist=use_blacklist):
+    if check_regex and not regex_check(email_address=email_address):
+        return False
+    if use_blacklist and not domainlist_check(email_address=email_address):
         return False
     if not check_mx:
         return True
