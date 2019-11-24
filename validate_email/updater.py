@@ -1,3 +1,4 @@
+from fcntl import LOCK_EX, LOCK_UN, flock
 from http.client import HTTPResponse
 from os import makedirs
 from pathlib import Path
@@ -9,18 +10,20 @@ from urllib.request import Request, urlopen
 BLACKLIST_URL = (
     'https://raw.githubusercontent.com/martenson/disposable-email-domains/'
     'master/disposable_email_blocklist.conf')
-LIB_PATH = Path(__file__).resolve().parent.joinpath('lib')
-BLACKLIST_FILE_PATH = LIB_PATH.joinpath('blacklist.txt')
+LIB_PATH_DEFAULT = Path(__file__).resolve().parent.joinpath('lib')
+BLACKLIST_FILE_PATH = LIB_PATH_DEFAULT.joinpath('blacklist.txt')
 
 
 class BlacklistUpdater(object):
     'Optionally auto-update the built-in `blacklist.txt`.'
 
-    _etag_file_path = LIB_PATH.joinpath('blacklist_etag.txt')
+    _etag_file_path = LIB_PATH_DEFAULT.joinpath('blacklist_etag.txt')
+    _lock_file_path = LIB_PATH_DEFAULT.joinpath('blacklist_lock')
     _refresh_when_older_than = 5 * 24 * 60 * 60  # 5 days
 
-    def __init__(self):
-        makedirs(name=LIB_PATH, exist_ok=True)
+    def __init__(self, lib_path: str = LIB_PATH_DEFAULT):
+        makedirs(name=lib_path, exist_ok=True)
+        self._lock_file_path.touch(exist_ok=True)
 
     def _read_etag(self) -> Optional[str]:
         'Read the etag header from the stored etag file when exists.'
@@ -62,8 +65,8 @@ class BlacklistUpdater(object):
         with open(BLACKLIST_FILE_PATH, 'wb') as fd:
             fd.write(response.fp.read())
 
-    def process(self, force: bool = False):
-        'Start optionally updating the blacklist.txt file.'
+    def _process(self, force: bool = False):
+        'Start optionally updating the blacklist.txt file, while locked.'
         if not force and not self.is_local_old:
             return
         request = Request(
@@ -77,3 +80,12 @@ class BlacklistUpdater(object):
                 print('not modified')
                 # Not modified, update date on the etag file
                 BLACKLIST_FILE_PATH.touch()
+
+    def process(self, force: bool = False):
+        'Start optionally updating the blacklist.txt file.'
+        with open(self._lock_file_path) as fd:
+            try:
+                flock(fd, LOCK_EX)
+                self._process(force=force)
+            finally:
+                flock(fd, LOCK_UN)

@@ -11,8 +11,8 @@ blacklist_updater.process(force=False)
 
 class DomainListValidator(object):
     'Check the provided email against domain lists.'
-    domain_whitelist = frozenset()
-    domain_blacklist = frozenset()
+    domain_whitelist = set()
+    domain_blacklist = set('localhost')
 
     def __init__(
             self, whitelist: SetOrNone = None, blacklist: SetOrNone = None):
@@ -30,8 +30,8 @@ class DomainListValidator(object):
                 lines = fd.readlines()
         except FileNotFoundError:
             return
-        self.domain_blacklist = \
-            set(x.strip().lower() for x in lines if x.strip())
+        self.domain_blacklist.update(
+            x.strip().lower() for x in lines if x.strip())
 
     def __call__(self, user_part: str, domain_part: str) -> bool:
         'Do the checking here.'
