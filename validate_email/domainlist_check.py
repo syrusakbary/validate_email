@@ -1,7 +1,12 @@
-from os.path import dirname, join
 from typing import Optional
 
+from .updater import BLACKLIST_FILE_PATH, BlacklistUpdater
+
 SetOrNone = Optional[set]
+
+# Start an optional update on module load
+blacklist_updater = BlacklistUpdater()
+blacklist_updater.process(force=False)
 
 
 class DomainListValidator(object):
@@ -20,9 +25,8 @@ class DomainListValidator(object):
 
     def _load_builtin_blacklist(self):
         'Load our built-in blacklist.'
-        path = join(dirname(__file__), 'lib', 'blacklist.txt')
         try:
-            with open(path) as fd:
+            with open(BLACKLIST_FILE_PATH) as fd:
                 lines = fd.readlines()
         except FileNotFoundError:
             return

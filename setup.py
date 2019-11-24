@@ -4,10 +4,6 @@ from urllib.request import urlopen
 from setuptools import find_packages, setup
 from setuptools.command.build_py import build_py
 
-BLACKLIST_URL = (
-    'https://raw.githubusercontent.com/martenson/disposable-email-domains/'
-    'master/disposable_email_blocklist.conf')
-
 
 class PostBuildPyCommand(build_py):
     'Post-installation for build_py'
@@ -15,12 +11,9 @@ class PostBuildPyCommand(build_py):
     def run(self):
         if self.dry_run:
             return super().run()
-        with urlopen(url=BLACKLIST_URL) as fd:
-            content = fd.read().decode('utf-8')
-        target_dir = join(self.build_lib, 'validate_email/lib')
-        self.mkpath(name=target_dir)
-        with open(join(target_dir, 'blacklist.txt'), 'w') as fd:
-            fd.write(content)
+        from validate_email.updater import BlacklistUpdater
+        blacklist_updater = BlacklistUpdater()
+        blacklist_updater.process(force=True)
         super().run()
 
 
