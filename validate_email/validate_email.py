@@ -16,9 +16,14 @@ def validate_email(
 
     Return `None` if the result is ambigious.
     """
-    if check_regex and not regex_check(email_address=email_address):
+    if not email_address or '@' not in email_address:
         return False
-    if use_blacklist and not domainlist_check(email_address=email_address):
+    user_part, domain_part = email_address.rsplit('@', 1)
+    if check_regex and \
+            not regex_check(user_part=user_part, domain_part=domain_part):
+        return False
+    if use_blacklist and \
+            not domainlist_check(user_part=user_part, domain_part=domain_part):
         return False
     if not check_mx:
         return True

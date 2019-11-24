@@ -41,7 +41,7 @@ class BlacklistCheckTestCase(TestCase):
         dl.run()
         domainlist_check._load_builtin_blacklist()
         self.assertFalse(expr=domainlist_check(
-            email_address='pa2@mailinator.com'))
+            user_part='pa2', domain_part='mailinator.com'))
         self.assertFalse(expr=validate_email(
             email_address='pa2@mailinator.com', check_regex=False,
             use_blacklist=True))
@@ -52,9 +52,5 @@ class BlacklistCheckTestCase(TestCase):
     def test_blacklist_negative(self):
         'Allows a domain not in the blacklist.'
         self.assertTrue(expr=domainlist_check(
-            email_address='pa2@some-random-domain-thats-not-blacklisted.com'))
-
-    def test_erroneous_email(self):
-        'Will reject emails in erroneous format.'
-        self.assertFalse(expr=domainlist_check(
-            email_address='pa2-mailinator.com'))
+            user_part='pa2',
+            domain_part='some-random-domain-thats-not-blacklisted.com'))

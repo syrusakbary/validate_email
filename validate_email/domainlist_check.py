@@ -29,13 +29,8 @@ class DomainListValidator(object):
         self.domain_blacklist = \
             set(x.strip().lower() for x in lines if x.strip())
 
-    def __call__(self, email_address: str) -> bool:
+    def __call__(self, user_part: str, domain_part: str) -> bool:
         'Do the checking here.'
-        if not email_address or '@' not in email_address:
-            return False
-
-        user_part, domain_part = email_address.rsplit('@', 1)
-
         if domain_part in self.domain_whitelist:
             return True
         if domain_part in self.domain_blacklist:

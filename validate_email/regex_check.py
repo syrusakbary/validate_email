@@ -34,12 +34,9 @@ def _validate_ipv46_address(value: str) -> bool:
 class RegexValidator(object):
     'Slightly adjusted email regex checker from the Django project.'
 
-    def __call__(self, email_address: str, use_blacklist: bool = True) -> bool:
-        if not email_address or '@' not in email_address:
-            return False
-
-        user_part, domain_part = email_address.rsplit('@', 1)
-
+    def __call__(
+            self, user_part: str, domain_part: str,
+            use_blacklist: bool = True) -> bool:
         if not USER_REGEX.match(user_part):
             return False
 
