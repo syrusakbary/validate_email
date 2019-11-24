@@ -1,6 +1,3 @@
-from os.path import join
-from urllib.request import urlopen
-
 from setuptools import find_packages, setup
 from setuptools.command.build_py import build_py
 
