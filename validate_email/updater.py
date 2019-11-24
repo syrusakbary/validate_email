@@ -10,7 +10,7 @@ from urllib.request import Request, urlopen
 BLACKLIST_URL = (
     'https://raw.githubusercontent.com/martenson/disposable-email-domains/'
     'master/disposable_email_blocklist.conf')
-LIB_PATH_DEFAULT = Path(__file__).resolve().parent.joinpath('lib')
+LIB_PATH_DEFAULT = Path(__file__).resolve().parent.joinpath('data')
 BLACKLIST_FILE_PATH = LIB_PATH_DEFAULT.joinpath('blacklist.txt')
 
 
@@ -77,7 +77,6 @@ class BlacklistUpdater(object):
             self._write_new_file(response=response)
         except HTTPError as exc:
             if exc.code == 304:
-                print('not modified')
                 # Not modified, update date on the etag file
                 BLACKLIST_FILE_PATH.touch()
 

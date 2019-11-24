@@ -1,5 +1,5 @@
 *.pyc
-validate_email/lib
+validate_email/data
 build
 dist
 MANIFEST
