@@ -39,7 +39,9 @@ UNPARSEABLE_EXAMPLES = [
     'email.domain.com',  # missing @
 ]
 
-class RegexTest(TestCase):
+
+class FormatValidity(TestCase):
+    'Testing regex validation + format validity.'
 
     def test_valid_email_structure_regex(self):
         'Accepts an email with a valid structure.'
