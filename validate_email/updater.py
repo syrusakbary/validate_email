@@ -3,8 +3,8 @@ from os import makedirs
 from pathlib import Path
 from time import time
 from typing import Optional
-from urllib.request import Request, urlopen
 from urllib.error import HTTPError
+from urllib.request import Request, urlopen
 
 BLACKLIST_URL = (
     'https://raw.githubusercontent.com/martenson/disposable-email-domains/'
