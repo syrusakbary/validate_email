@@ -1,3 +1,6 @@
+0.2.0:
+- Added automatic auto-updater for updating built-in blacklists.
+
 0.1.12:
 - Blacklist/whitelist domains checking is now independent of regex checking.
 

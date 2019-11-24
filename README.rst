@@ -7,7 +7,7 @@
 py3-validate-email
 ============================
 
-py3-validate-email is a package for Python that check if an email is valid, properly formatted and really exists.
+py3-validate-email is a package for Python that check if an email is valid, not blacklisted, properly formatted and really exists.
 
 This module is for Python 3.6 and above!
 
@@ -40,6 +40,10 @@ Basic usage::
 :code:`dns_timeout`: seconds until DNS timeout
 
 :code:`use_blacklist`: use the blacklist of domains downloaded from https://github.com/martenson/disposable-email-domains
+
+Auto-updater
+============================
+The package contains an auto-updater for downloading and updating the built-in blacklist.txt. It will run on each module load (and installation), but will try to update the content if the file is older than 5 days, and if the content is not the same that's already downloaded.
 
 TODOs and BUGS
 ============================

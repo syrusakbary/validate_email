@@ -82,6 +82,8 @@ class BlacklistUpdater(object):
 
     def process(self, force: bool = False):
         'Start optionally updating the blacklist.txt file.'
+        # Locking for avoiding multi-process update on multi-process
+        # startup
         with open(self._lock_file_path) as fd:
             try:
                 flock(fd, LOCK_EX)
