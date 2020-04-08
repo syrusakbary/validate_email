@@ -24,9 +24,9 @@ def _dissect_email(email_address: str) -> Tuple[str, str]:
     try:
         domain = EMAIL_EXTRACT_HOST_REGEX.search(string=email_address)[1]
     except TypeError:
-        raise AddressFormatError(email_address)
+        raise AddressFormatError
     except IndexError:
-        raise AddressFormatError(email_address)
+        raise AddressFormatError
     return email_address[:-(len(domain) + 1)], domain
 
 
@@ -122,7 +122,7 @@ def mx_check(
     try:
         idna_to = _get_idna_address(email_address=email_address)
     except IDNAError:
-        return False
+        raise AddressFormatError
     _user, domain = _dissect_email(email_address=email_address)
     mx_records = _get_mx_records(domain=domain, timeout=dns_timeout)
     return _check_mx_records(

@@ -5,7 +5,8 @@ from unittest.mock import Mock, patch
 from dns.exception import Timeout
 
 from validate_email import mx_check as mx_module
-from validate_email.exceptions import DNSTimeoutError, NoValidMXError
+from validate_email.exceptions import (
+    AddressFormatError, DNSTimeoutError, NoValidMXError)
 from validate_email.mx_check import (
     _dissect_email, _get_idna_address, _get_mx_records)
 
@@ -96,5 +97,7 @@ class GetMxRecordsTestCase(TestCase):
 
     def test_returns_false_on_idna_failure(self):
         'Returns `False` on IDNA failure.'
-        self.assertFalse(expr=mx_module.mx_check(
-            email_address='test@♥web.de', from_address='mail@example.com'))
+        with self.assertRaises(AddressFormatError):
+            mx_module.mx_check(
+                    email_address='test@♥web.de',
+                    from_address='mail@example.com')
