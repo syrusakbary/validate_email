@@ -32,7 +32,7 @@ def validate_email_or_fail(
         dns_timeout=dns_timeout)
 
 
-def validate_email(*args, **kwargs):
+def validate_email(email_address: str, *args, **kwargs):
     """
     Return `True` or `False` depending if the email address exists
     or/and can be delivered.
@@ -40,7 +40,8 @@ def validate_email(*args, **kwargs):
     Return `None` if the result is ambigious.
     """
     try:
-        return validate_email_or_fail(*args, **kwargs)
+        return validate_email_or_fail(email_address, *args, **kwargs)
     except EmailValidationError as error:
-        getLogger('validate_email').info(error)
+        message = f'Validation for {email_address!r} failed: {error}'
+        getLogger('validate_email').info(message)
         return False
