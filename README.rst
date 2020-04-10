@@ -41,6 +41,8 @@ Basic usage::
 
 :code:`use_blacklist`: use the blacklist of domains downloaded from https://github.com/martenson/disposable-email-domains
 
+The function :code:`validate_email_or_fail()` works exactly like :code:`validate_email`, except that it raises an exception in the case of validation failure instead of returning :code:`False`.
+
 Auto-updater
 ============================
 The package contains an auto-updater for downloading and updating the built-in blacklist.txt. It will run on each module load (and installation), but will try to update the content if the file is older than 5 days, and if the content is not the same that's already downloaded.

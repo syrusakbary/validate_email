@@ -2,6 +2,7 @@ from ipaddress import IPv4Address, IPv6Address
 from typing import Optional
 
 from .constants import HOST_REGEX, LITERAL_REGEX, USER_REGEX
+from .exceptions import AddressFormatError
 
 SetOrNone = Optional[set]
 
@@ -38,7 +39,7 @@ class RegexValidator(object):
             self, user_part: str, domain_part: str,
             use_blacklist: bool = True) -> bool:
         if not USER_REGEX.match(user_part):
-            return False
+            raise AddressFormatError
 
         if not self.validate_domain_part(domain_part):
             # Try for possible IDN domain-part
@@ -49,7 +50,7 @@ class RegexValidator(object):
             else:
                 if self.validate_domain_part(domain_part):
                     return True
-            return False
+            raise AddressFormatError
         return True
 
     def validate_domain_part(self, domain_part):

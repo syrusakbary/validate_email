@@ -5,6 +5,8 @@ from unittest.mock import Mock, patch
 from dns.exception import Timeout
 
 from validate_email import mx_check as mx_module
+from validate_email.exceptions import (
+    AddressFormatError, DNSTimeoutError, NoValidMXError)
 from validate_email.mx_check import (
     _dissect_email, _get_idna_address, _get_mx_records)
 
@@ -63,22 +65,16 @@ class GetMxRecordsTestCase(TestCase):
         'Fails when an MX hostname is "."'
         TEST_QUERY.return_value = [
             SimpleNamespace(exchange=DnsNameStub(value='.'))]
-        with self.assertRaises(ValueError) as exc:
+        with self.assertRaises(NoValidMXError):
             _get_mx_records(domain='testdomain1', timeout=10)
-        self.assertEqual(
-            exc.exception.args[0],
-            'Domain testdomain1 does not have a valid MX record')
 
     @patch.object(target=mx_module, attribute='query', new=TEST_QUERY)
     def test_fails_with_null_hostnames(self):
         'Fails when an MX hostname is invalid.'
         TEST_QUERY.return_value = [
             SimpleNamespace(exchange=DnsNameStub(value='asdqwe'))]
-        with self.assertRaises(ValueError) as exc:
+        with self.assertRaises(NoValidMXError):
             _get_mx_records(domain='testdomain2', timeout=10)
-        self.assertEqual(
-            exc.exception.args[0],
-            'Domain testdomain2 does not have a valid MX record')
 
     @patch.object(target=mx_module, attribute='query', new=TEST_QUERY)
     def test_filters_out_invalid_hostnames(self):
@@ -93,15 +89,15 @@ class GetMxRecordsTestCase(TestCase):
         self.assertListEqual(result, ['valid.host.', 'valid2.host.'])
 
     @patch.object(target=mx_module, attribute='query', new=TEST_QUERY)
-    def test_raises_valueerror_on_dns_exception(self):
-        'Raises `ValueError` on DNS exception.'
+    def test_raises_exception_on_dns_timeout(self):
+        'Raises exception on DNS timeout.'
         TEST_QUERY.side_effect = Timeout()
-        with self.assertRaises(ValueError) as exc:
+        with self.assertRaises(DNSTimeoutError):
             _get_mx_records(domain='testdomain3', timeout=10)
-        self.assertEqual(
-            exc.exception.args[0], 'testdomain3 DNS resolve timed out')
 
     def test_returns_false_on_idna_failure(self):
         'Returns `False` on IDNA failure.'
-        self.assertFalse(expr=mx_module.mx_check(
-            email_address='test@♥web.de', from_address='mail@example.com'))
+        with self.assertRaises(AddressFormatError):
+            mx_module.mx_check(
+                    email_address='test@♥web.de',
+                    from_address='mail@example.com')

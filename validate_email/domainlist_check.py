@@ -1,5 +1,6 @@
 from typing import Optional
 
+from .exceptions import DomainBlacklistedError
 from .updater import BLACKLIST_FILE_PATH, BlacklistUpdater
 
 SetOrNone = Optional[set]
@@ -38,7 +39,7 @@ class DomainListValidator(object):
         if domain_part in self.domain_whitelist:
             return True
         if domain_part in self.domain_blacklist:
-            return False
+            raise DomainBlacklistedError
         return True
 
 

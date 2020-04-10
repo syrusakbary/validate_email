@@ -12,6 +12,10 @@ from dns.resolver import (
 from idna.core import IDNAError, encode
 
 from .constants import EMAIL_EXTRACT_HOST_REGEX, HOST_REGEX
+from .exceptions import (
+    AddressFormatError, AddressNotDeliverableError, DNSConfigurationError,
+    DNSTimeoutError, DomainNotFoundError, NoMXError, NoNameserverError,
+    NoValidMXError)
 
 
 @lru_cache(maxsize=10)
@@ -20,9 +24,9 @@ def _dissect_email(email_address: str) -> Tuple[str, str]:
     try:
         domain = EMAIL_EXTRACT_HOST_REGEX.search(string=email_address)[1]
     except TypeError:
-        raise ValueError('Invalid email address')
+        raise AddressFormatError
     except IndexError:
-        raise ValueError('Invalid email address')
+        raise AddressFormatError
     return email_address[:-(len(domain) + 1)], domain
 
 
@@ -36,30 +40,29 @@ def _get_idna_address(email_address: str) -> str:
 
 def _get_mx_records(domain: str, timeout: int) -> list:
     """
-    Return a list of hostnames in the MX record, raise `ValueError` on
+    Return a list of hostnames in the MX record, raise an exception on
     any issues.
     """
     try:
         records = query(
             qname=domain, rdtype=rdtype_mx, lifetime=timeout)  # type: Answer
     except NXDOMAIN:
-        raise ValueError(f'Domain {domain} does not seem to exist')
-    except NoAnswer:
-        raise ValueError(f'Domain {domain} does not have an MX record')
-    except Timeout:
-        raise ValueError(f'{domain} DNS resolve timed out')
-    except YXDOMAIN:
-        raise ValueError(
-            'The DNS query name is too long after DNAME substitution.')
+        raise DomainNotFoundError
     except NoNameservers:
-        raise ValueError('No nameservers responded in time.')
+        raise NoNameserverError
+    except Timeout:
+        raise DNSTimeoutError
+    except YXDOMAIN:
+        raise DNSConfigurationError
+    except NoAnswer:
+        raise NoMXError
     to_check = dict()
     for record in records:  # type: MX
         dns_str = record.exchange.to_text()  # type: str
         to_check[dns_str] = dns_str[:-1] if dns_str.endswith('.') else dns_str
     result = [k for k, v in to_check.items() if HOST_REGEX.search(string=v)]
     if not len(result):
-        raise ValueError(f'Domain {domain} does not have a valid MX record')
+        raise NoValidMXError
     return result
 
 
@@ -70,7 +73,8 @@ def _check_mx_records(
     'Check the mx records for a given email address.'
     smtp = SMTP(timeout=smtp_timeout)
     smtp.set_debuglevel(debuglevel=0)
-    answers = set()
+    error_messages = []
+    found_ambigious = False
     for mx_record in mx_records:
         try:
             smtp.connect(host=mx_record)
@@ -79,18 +83,27 @@ def _check_mx_records(
             code, message = smtp.rcpt(recip=email_address)
             smtp.quit()
         except SMTPServerDisconnected:
-            answers.add(None)
+            found_ambigious = True
             continue
-        except SocketError:
-            answers.add(False)
+        except SocketError as error:
+            error_messages.append(f'{mx_record}: {error}')
             continue
         if code == 250:
             return True
-        if 400 <= code <= 499:
+        elif 400 <= code <= 499:
             # Ambigious return code, can be graylist, temporary
             # problems, quota or mailsystem error
-            answers.add(None)
-    return None if None in answers else False
+            found_ambigious = True
+        else:
+            message = message.decode(errors='ignore')
+            error_messages.append(f'{mx_record}: {code} {message}')
+
+    # If any of the mx servers behaved ambigious, return None, otherwise raise
+    # an exceptin containing the collected error messages.
+    if found_ambigious:
+        return None
+    else:
+        raise AddressNotDeliverableError(error_messages)
 
 
 def mx_check(
@@ -109,12 +122,9 @@ def mx_check(
     try:
         idna_to = _get_idna_address(email_address=email_address)
     except IDNAError:
-        return False
+        raise AddressFormatError
     _user, domain = _dissect_email(email_address=email_address)
-    try:
-        mx_records = _get_mx_records(domain=domain, timeout=dns_timeout)
-    except ValueError:
-        return False
+    mx_records = _get_mx_records(domain=domain, timeout=dns_timeout)
     return _check_mx_records(
         mx_records=mx_records, smtp_timeout=smtp_timeout, helo_host=host,
         from_address=idna_from, email_address=idna_to)

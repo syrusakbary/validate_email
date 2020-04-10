@@ -1,5 +1,6 @@
 from unittest.case import TestCase
 
+from validate_email.exceptions import AddressFormatError
 from validate_email.regex_check import regex_check
 from validate_email.validate_email import validate_email
 
@@ -55,9 +56,9 @@ class FormatValidity(TestCase):
         'Rejects an email with an invalid structure.'
         for address in INVALID_EXAMPLES:
             user_part, domain_part = address.rsplit('@', 1)
-            self.assertFalse(
-                expr=regex_check(user_part=user_part, domain_part=domain_part),
-                msg=f'Check is true with {address}')
+            with self.assertRaises(
+                    AddressFormatError, msg=f'Test failed for {address}'):
+                regex_check(user_part=user_part, domain_part=domain_part),
 
     def test_unparseable_email(self):
         'Rejects an unparseable email.'
