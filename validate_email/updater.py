@@ -1,4 +1,3 @@
-from fcntl import LOCK_EX, LOCK_UN, flock
 from http.client import HTTPResponse
 from os import makedirs
 from pathlib import Path
@@ -6,12 +5,20 @@ from time import time
 from typing import Optional
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
+from tempfile import gettempdir, gettempprefix
 
+from filelock import FileLock
+
+TMP_PATH = Path(gettempdir())
 BLACKLIST_URL = (
     'https://raw.githubusercontent.com/martenson/disposable-email-domains/'
     'master/disposable_email_blocklist.conf')
 LIB_PATH_DEFAULT = Path(__file__).resolve().parent.joinpath('data')
-BLACKLIST_FILE_PATH = LIB_PATH_DEFAULT.joinpath('blacklist.txt')
+BLACKLIST_FILEPATH_INSTALLED = LIB_PATH_DEFAULT.joinpath('blacklist.txt')
+BLACKLIST_FILEPATH_TEMPORARY = TMP_PATH.joinpath(
+    f'{gettempprefix()}-py3-validateemail-blacklist.txt')
+LOCK_PATH = TMP_PATH.joinpath(
+    f'{gettempprefix()}-py3-validateemail-blacklistupdater.lock')
 
 
 class BlacklistUpdater(object):
@@ -41,8 +48,10 @@ class BlacklistUpdater(object):
     @property
     def is_local_old(self) -> bool:
         'Return `True` if the locally stored file is old.'
+        if not BLACKLIST_FILEPATH_TEMPORARY.exists():
+            return True
         try:
-            ctime = BLACKLIST_FILE_PATH.stat().st_ctime
+            ctime = BLACKLIST_FILEPATH_INSTALLED.stat().st_ctime
             return ctime < time() - self._refresh_when_older_than
         except FileNotFoundError:
             return True
@@ -62,7 +71,7 @@ class BlacklistUpdater(object):
         'Write new data file on its arrival.'
         if 'ETag' in response.headers:
             self._write_etag(response.headers.get('ETag'))
-        with open(BLACKLIST_FILE_PATH, 'wb') as fd:
+        with open(BLACKLIST_FILEPATH_TEMPORARY, 'wb') as fd:
             fd.write(response.fp.read())
 
     def _process(self, force: bool = False):
@@ -84,9 +93,5 @@ class BlacklistUpdater(object):
         'Start optionally updating the blacklist.txt file.'
         # Locking for avoiding multi-process update on multi-process
         # startup
-        with open(self._lock_file_path) as fd:
-            try:
-                flock(fd, LOCK_EX)
-                self._process(force=force)
-            finally:
-                flock(fd, LOCK_UN)
+        with FileLock(lock_file=LOCK_PATH):
+            self._process(force=force)
