@@ -1,7 +1,8 @@
+from typing import Iterable
+
+
 class EmailValidationError(Exception):
-    """
-    Base class for all exceptions indicating validation failure.
-    """
+    'Base class for all exceptions indicating validation failure.'
     message = 'Unknown error.'
 
     def __str__(self):
@@ -9,74 +10,55 @@ class EmailValidationError(Exception):
 
 
 class AddressFormatError(EmailValidationError):
-    """
-    Raised when the email address has an invalid format.
-    """
+    'Raised when the email address has an invalid format.'
     message = 'Invalid email address.'
 
 
 class DomainBlacklistedError(EmailValidationError):
     """
     Raised when the domain of the email address is blacklisted on
-    https://git.com/martenson/disposable-email-domains.
+    https://github.com/martenson/disposable-email-domains.
     """
     message = 'Domain blacklisted.'
 
 
 class DomainNotFoundError(EmailValidationError):
-    """
-    Raised when the domain of the email address is blacklisted on
-    https://git.com/martenson/disposable-email-domains.
-    """
+    'Raised when the domain is not found.'
     message = 'Domain not found.'
 
 
 class NoNameserverError(EmailValidationError):
-    """
-    Raised when the domain of the email address is blacklisted on
-    https://git.com/martenson/disposable-email-domains.
-    """
+    'Raised when the domain does not resolve by nameservers in time.'
     message = 'No nameserver found for domain.'
 
 
 class DNSTimeoutError(EmailValidationError):
-    """
-    Raised when the domain of the email address is blacklisted on
-    https://git.com/martenson/disposable-email-domains.
-    """
+    'Raised when the domain lookup times out.'
     message = 'Domain lookup timed out.'
 
 
 class DNSConfigurationError(EmailValidationError):
     """
-    Raised when the domain of the email address is blacklisted on
-    https://git.com/martenson/disposable-email-domains.
+    Raised when the DNS entries for this domain are falsely configured.
     """
     message = 'Misconfigurated DNS entries for domain.'
 
 
 class NoMXError(EmailValidationError):
-    """
-    Raised when the domain of the email address is blacklisted on
-    https://git.com/martenson/disposable-email-domains.
-    """
+    'Raised then the domain has no MX records configured.'
     message = 'No MX record for domain found.'
 
 
 class NoValidMXError(EmailValidationError):
-    """
-    Raised when the domain of the email address is blacklisted on
-    https://git.com/martenson/disposable-email-domains.
-    """
     message = 'No valid MX record for domain found.'
 
 
 class AddressNotDeliverableError(EmailValidationError):
-    """
-    Raised when the domain of the email address is blacklisted on
-    https://git.com/martenson/disposable-email-domains.
-    """
-    message = 'Non-deliverable email address:'
+    'Raised when a non-ambigious resulted lookup fails.'
+    message = 'Email address undeliverable:'
 
-    def __init__(self, error_messages):
-        self.message = '\n'.join([self.message] + error_messages)
+    def __init__(self, error_messages: Iterable):
+        self.error_messages = error_messages
+
+    def __str__(self) -> str:
+        return '\n'.join([self.message] + self.error_messages)

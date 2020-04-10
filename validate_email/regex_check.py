@@ -53,7 +53,7 @@ class RegexValidator(object):
             raise AddressFormatError
         return True
 
-    def validate_domain_part(self, domain_part):
+    def validate_domain_part(self, domain_part: str):
         if HOST_REGEX.match(domain_part):
             return True
 

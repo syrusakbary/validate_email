@@ -1,3 +1,4 @@
+- April 2020: Extending with logging and raising errors by @reinhard-mueller
 - March 2019: extending and upgrading with blacklists by László Károlyi <laszlo@karolyi.hu
 - validate_email was extended and updated for use with Python 3 by Ben Baert <ben_b@gmx.com> in May 2018.
 - validate_email was created by Syrus Akbary <me@syrusakbary.com> in April 2012.

@@ -57,7 +57,8 @@ class FormatValidity(TestCase):
         for address in INVALID_EXAMPLES:
             user_part, domain_part = address.rsplit('@', 1)
             with self.assertRaises(
-                    AddressFormatError, msg=f'Test failed for {address}'):
+                    expected_exception=AddressFormatError,
+                    msg=f'Test failed for {address}'):
                 regex_check(user_part=user_part, domain_part=domain_part),
 
     def test_unparseable_email(self):

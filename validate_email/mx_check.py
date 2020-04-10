@@ -61,9 +61,38 @@ def _get_mx_records(domain: str, timeout: int) -> list:
         dns_str = record.exchange.to_text()  # type: str
         to_check[dns_str] = dns_str[:-1] if dns_str.endswith('.') else dns_str
     result = [k for k, v in to_check.items() if HOST_REGEX.search(string=v)]
-    if not len(result):
+    if not result:
         raise NoValidMXError
     return result
+
+
+def _check_one_mx(
+        smtp: SMTP, error_messages: list, mx_record: str, helo_host: str,
+        from_address: str, email_address: str) -> bool:
+    """
+    Check one MX server, return the `is_ambigious` boolean or raise
+    `StopIteration` if this MX accepts the email.
+    """
+    try:
+        smtp.connect(host=mx_record)
+        smtp.helo(name=helo_host)
+        smtp.mail(sender=from_address)
+        code, message = smtp.rcpt(recip=email_address)
+        smtp.quit()
+    except SMTPServerDisconnected:
+        return True
+    except SocketError as error:
+        error_messages.append(f'{mx_record}: {error}')
+        return False
+    if code == 250:
+        raise StopIteration
+    elif 400 <= code <= 499:
+        # Ambigious return code, can be graylist, temporary problems,
+        # quota or mailsystem error
+        return True
+    message = message.decode(errors='ignore')
+    error_messages.append(f'{mx_record}: {code} {message}')
+    return False
 
 
 def _check_mx_records(
@@ -77,32 +106,15 @@ def _check_mx_records(
     found_ambigious = False
     for mx_record in mx_records:
         try:
-            smtp.connect(host=mx_record)
-            smtp.helo(name=helo_host)
-            smtp.mail(sender=from_address)
-            code, message = smtp.rcpt(recip=email_address)
-            smtp.quit()
-        except SMTPServerDisconnected:
-            found_ambigious = True
-            continue
-        except SocketError as error:
-            error_messages.append(f'{mx_record}: {error}')
-            continue
-        if code == 250:
+            found_ambigious |= _check_one_mx(
+                smtp=smtp, error_messages=error_messages, mx_record=mx_record,
+                helo_host=helo_host, from_address=from_address,
+                email_address=email_address)
+        except StopIteration:
             return True
-        elif 400 <= code <= 499:
-            # Ambigious return code, can be graylist, temporary
-            # problems, quota or mailsystem error
-            found_ambigious = True
-        else:
-            message = message.decode(errors='ignore')
-            error_messages.append(f'{mx_record}: {code} {message}')
-
     # If any of the mx servers behaved ambigious, return None, otherwise raise
-    # an exceptin containing the collected error messages.
-    if found_ambigious:
-        return None
-    else:
+    # an exception containing the collected error messages.
+    if not found_ambigious:
         raise AddressNotDeliverableError(error_messages)
 
 

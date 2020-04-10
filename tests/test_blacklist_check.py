@@ -19,26 +19,20 @@ class BlacklistCheckTestCase(TestCase):
             domainlist_check(user_part='pa2', domain_part='mailinator.com')
         with self.assertRaises(DomainBlacklistedError):
             validate_email_or_fail(
-                    email_address='pa2@mailinator.com',
-                    check_regex=False,
-                    use_blacklist=True)
+                email_address='pa2@mailinator.com', check_regex=False,
+                use_blacklist=True)
         with self.assertRaises(DomainBlacklistedError):
             validate_email_or_fail(
-                    email_address='pa2@mailinator.com',
-                    check_regex=True,
-                    use_blacklist=True)
+                email_address='pa2@mailinator.com', check_regex=True,
+                use_blacklist=True)
         with self.assertLogs():
-            self.assertFalse(
-                    validate_email(
-                        email_address='pa2@mailinator.com',
-                        check_regex=False,
-                        use_blacklist=True))
+            self.assertFalse(expr=validate_email(
+                email_address='pa2@mailinator.com', check_regex=False,
+                use_blacklist=True))
         with self.assertLogs():
-            self.assertFalse(
-                    validate_email(
-                        email_address='pa2@mailinator.com',
-                        check_regex=True,
-                        use_blacklist=True))
+            self.assertFalse(expr=validate_email(
+                email_address='pa2@mailinator.com', check_regex=True,
+                use_blacklist=True))
 
     def test_blacklist_negative(self):
         'Allows a domain not in the blacklist.'

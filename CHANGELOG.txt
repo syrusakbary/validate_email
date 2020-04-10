@@ -1,3 +1,9 @@
+0.2.1:
+- Added a validate_email_or_fail function that will raise an exception
+  (base class validate_email.exceptions.EmailValidationError) when the
+  passed email check fails, while logging a warning with the validation
+  result.
+
 0.2.0:
 - Added automatic auto-updater for updating built-in blacklists.
 
