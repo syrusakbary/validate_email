@@ -14,9 +14,9 @@ This module is for Python 3.6 and above!
 INSTALLATION
 ============================
 
-You can install the package with pip:
+You can install the package with pip::
 
-    pip install py3-validate-email
+    python -m pip install py3-validate-email
 
 
 USAGE
@@ -45,20 +45,20 @@ The function :code:`validate_email_or_fail()` works exactly like :code:`validate
 
 Auto-updater
 ============================
-The package contains an auto-updater for downloading and updating the built-in blacklist.txt. It will run on each module load (and installation), but will try to update the content if the file is older than 5 days, and if the content is not the same that's already downloaded.
+The package contains an auto-updater for downloading and updating the built-in blacklist.txt. It will run on each module load (and installation), but will try to update the content only if the file is older than 5 days, and if the content is not the same that's already downloaded.
 
 The update can be triggered manually::
 
     from validate_email.updater import update_builtin_blacklist
 
     update_builtin_blacklist(force: bool = False, background: bool = True,
-        callback: MethodType = None) -> Optional[Thread]
+        callback: Callable = None) -> Optional[Thread]
 
 :code:`force`: forces the update even if the downloaded/installed file is fresh enough.
 
 :code:`background`: starts the update in a ``Thread`` so it won't make your code hang while it's updating. If you set this to true, the function will return the Thread used for starting the update so you can ``join()`` it if necessary.
 
-:code:`callback`: An optional function to be called when the update is done.
+:code:`callback`: An optional `Callable` (function/method) to be called when the update is done.
 
 TODOs and BUGS
 ============================

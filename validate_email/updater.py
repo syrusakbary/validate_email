@@ -4,8 +4,7 @@ from pathlib import Path
 from tempfile import gettempdir, gettempprefix
 from threading import Thread
 from time import time
-from types import MethodType
-from typing import Optional
+from typing import Callable, Optional
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
@@ -36,7 +35,7 @@ class BlacklistUpdater(object):
     """
 
     _refresh_when_older_than: int = 5 * 24 * 60 * 60  # 5 days
-    _on_update_callback: MethodType = None
+    _on_update_callback: Callable = None
     _is_install_time: bool = False
 
     @property
@@ -123,11 +122,11 @@ class BlacklistUpdater(object):
                 BLACKLIST_FILEPATH_TMP.touch()
                 return
             raise
-        if type(self._on_update_callback) is MethodType:
+        if self._on_update_callback:
             self._on_update_callback()
 
     def process(
-            self, force: bool = False, callback: Optional[MethodType] = None):
+            self, force: bool = False, callback: Optional[Callable] = None):
         'Start optionally updating the blacklist.txt file.'
         # Locking to avoid multi-process update on multi-process startup
         self._on_update_callback = callback
@@ -137,7 +136,7 @@ class BlacklistUpdater(object):
 
 def update_builtin_blacklist(
         force: bool = False, background: bool = True,
-        callback: MethodType = None) -> Optional[Thread]:
+        callback: Callable = None) -> Optional[Thread]:
     """
     Update and reload the built-in blacklist. Return the `Thread` used
     to do the background update, so it can be `join()`-ed.
