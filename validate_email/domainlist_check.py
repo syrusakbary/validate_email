@@ -1,19 +1,20 @@
+from logging import getLogger
 from typing import Optional
 
 from .exceptions import DomainBlacklistedError
-from .updater import BLACKLIST_FILE_PATH, BlacklistUpdater
+from .updater import (
+    BLACKLIST_FILEPATH_INSTALLED, BLACKLIST_FILEPATH_TMP,
+    update_builtin_blacklist)
 
 SetOrNone = Optional[set]
-
-# Start an optional update on module load
-blacklist_updater = BlacklistUpdater()
-blacklist_updater.process(force=False)
+LOGGER = getLogger(__name__)
 
 
 class DomainListValidator(object):
     'Check the provided email against domain lists.'
     domain_whitelist = set()
     domain_blacklist = set('localhost')
+    _is_builtin_bl_used: bool = False
 
     def __init__(
             self, whitelist: SetOrNone = None, blacklist: SetOrNone = None):
@@ -22,16 +23,33 @@ class DomainListValidator(object):
         if blacklist:
             self.domain_blacklist = set(x.lower() for x in blacklist)
         else:
-            self._load_builtin_blacklist()
+            self._is_builtin_bl_used = True
+            self.reload_builtin_blacklist()
 
-    def _load_builtin_blacklist(self):
-        'Load our built-in blacklist.'
+    @property
+    def _blacklist_path(self) -> str:
+        'Return the path of the `blacklist.txt` that should be loaded.'
         try:
-            with open(BLACKLIST_FILE_PATH) as fd:
+            # Zero size, file is touched to indicate the
+            # preinstalled file is still fresh enough
+            return BLACKLIST_FILEPATH_INSTALLED \
+                if BLACKLIST_FILEPATH_TMP.stat().st_size == 0 \
+                else BLACKLIST_FILEPATH_TMP
+        except FileNotFoundError:
+            return BLACKLIST_FILEPATH_INSTALLED
+
+    def reload_builtin_blacklist(self):
+        '(Re)load our built-in blacklist.'
+        if not self._is_builtin_bl_used:
+            return
+        bl_path = self._blacklist_path
+        LOGGER.debug(msg=f'(Re)loading blacklist: {bl_path}')
+        try:
+            with open(bl_path) as fd:
                 lines = fd.readlines()
         except FileNotFoundError:
             return
-        self.domain_blacklist.update(
+        self.domain_blacklist = set(
             x.strip().lower() for x in lines if x.strip())
 
     def __call__(self, user_part: str, domain_part: str) -> bool:
@@ -44,3 +62,7 @@ class DomainListValidator(object):
 
 
 domainlist_check = DomainListValidator()
+# Start an optional update on module load
+update_builtin_blacklist(
+    force=False, background=True,
+    callback=domainlist_check.reload_builtin_blacklist)

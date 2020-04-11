@@ -3,6 +3,11 @@
   (base class validate_email.exceptions.EmailValidationError) when the
   passed email check fails, while logging a warning with the validation
   result.
+- The blacklist updater can now use a separate thread and writable temp
+  paths to download and store its data, while logs about the update
+  process on DEBUG.
+- Exposed a `validate_email.updater.update_builtin_blacklist` to update
+  the built-in blacklists while running.
 
 0.2.0:
 - Added automatic auto-updater for updating built-in blacklists.

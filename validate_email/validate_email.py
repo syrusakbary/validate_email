@@ -6,7 +6,7 @@ from .exceptions import AddressFormatError, EmailValidationError
 from .mx_check import mx_check
 from .regex_check import regex_check
 
-logger = getLogger(name='validate_email')
+LOGGER = getLogger(name=__name__)
 
 
 def validate_email_or_fail(
@@ -45,5 +45,5 @@ def validate_email(email_address: str, *args, **kwargs):
         return validate_email_or_fail(email_address, *args, **kwargs)
     except EmailValidationError as error:
         message = f'Validation for {email_address!r} failed: {error}'
-        logger.warning(msg=message)
+        LOGGER.warning(msg=message)
         return False

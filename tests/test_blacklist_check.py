@@ -1,20 +1,20 @@
 from unittest.case import TestCase
 
-from validate_email import validate_email, validate_email_or_fail
-from validate_email.domainlist_check import BlacklistUpdater, domainlist_check
+from validate_email.domainlist_check import (
+    domainlist_check, update_builtin_blacklist)
 from validate_email.exceptions import DomainBlacklistedError
+from validate_email.validate_email import (
+    validate_email, validate_email_or_fail)
 
 
 class BlacklistCheckTestCase(TestCase):
     'Testing if the included blacklist filtering works.'
 
     def setUpClass():
-        blacklist_updater = BlacklistUpdater()
-        blacklist_updater.process()
+        update_builtin_blacklist(force=False, background=False)
 
     def test_blacklist_positive(self):
         'Disallows blacklist item: mailinator.com.'
-        domainlist_check._load_builtin_blacklist()
         with self.assertRaises(DomainBlacklistedError):
             domainlist_check(user_part='pa2', domain_part='mailinator.com')
         with self.assertRaises(DomainBlacklistedError):

@@ -9,8 +9,13 @@ class PostInstallCommand(install):
     def run(self):
         if self.dry_run:
             return super().run()
+        # The updater will walk code stack frames and see if this
+        # variable is set in locals() to determine if it is run from the
+        # setup, in which case it won't autoupdate.
+        _IS_VALIDATEEMAIL_SETUP = True
         from validate_email.updater import BlacklistUpdater
         blacklist_updater = BlacklistUpdater()
+        blacklist_updater._is_install_time = _IS_VALIDATEEMAIL_SETUP
         blacklist_updater.process(force=True)
         super().run()
 
@@ -21,8 +26,13 @@ class PostDevelopCommand(develop):
     def run(self):
         if self.dry_run:
             return super().run()
+        # The updater will walk code stack frames and see if this
+        # variable is set in locals() to determine if it is run from the
+        # setup, in which case it won't autoupdate.
+        _IS_VALIDATEEMAIL_SETUP = True
         from validate_email.updater import BlacklistUpdater
         blacklist_updater = BlacklistUpdater()
+        blacklist_updater._is_install_time = _IS_VALIDATEEMAIL_SETUP
         blacklist_updater.process(force=True)
         super().run()
 
