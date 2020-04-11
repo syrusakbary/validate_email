@@ -1,5 +1,6 @@
 from http.client import HTTPResponse
 from logging import getLogger
+from os import geteuid
 from pathlib import Path
 from tempfile import gettempdir, gettempprefix
 from threading import Thread
@@ -13,7 +14,8 @@ from filelock import FileLock
 from .utils import is_setuptime
 
 LOGGER = getLogger(__name__)
-TMP_PATH = Path(gettempdir()).joinpath(f'{gettempprefix()}-py3-validate-email')
+TMP_PATH = Path(gettempdir()).joinpath(
+    f'{gettempprefix()}-py3-validate-email-{geteuid()}')
 TMP_PATH.mkdir(exist_ok=True)
 BLACKLIST_URL = (
     'https://raw.githubusercontent.com/martenson/disposable-email-domains/'
