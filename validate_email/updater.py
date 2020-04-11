@@ -122,6 +122,7 @@ class BlacklistUpdater(object):
                 LOGGER.debug(msg=f'Local file is fresh enough (same ETag).')
                 BLACKLIST_FILEPATH_TMP.touch()
                 return
+            raise
         if type(self._on_update_callback) is MethodType:
             self._on_update_callback()
 

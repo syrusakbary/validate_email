@@ -39,7 +39,7 @@ class PostDevelopCommand(develop):
 
 setup(
     name='py3-validate-email',
-    version='0.2.0',
+    version='0.2.1',
     packages=find_packages(exclude=['tests']),
     install_requires=['dnspython>=1.16.0', 'idna>=2.8', 'filelock>=3.0.12'],
     author='László Károlyi',
