@@ -35,7 +35,6 @@ class BlacklistUpdater(object):
     """
 
     _refresh_when_older_than: int = 5 * 24 * 60 * 60  # 5 days
-    _on_update_callback: Callable = None
     _is_install_time: bool = False
 
     @property
@@ -122,16 +121,18 @@ class BlacklistUpdater(object):
                 BLACKLIST_FILEPATH_TMP.touch()
                 return
             raise
-        if self._on_update_callback:
-            self._on_update_callback()
 
     def process(
             self, force: bool = False, callback: Optional[Callable] = None):
         'Start optionally updating the blacklist.txt file.'
         # Locking to avoid multi-process update on multi-process startup
-        self._on_update_callback = callback
         with FileLock(lock_file=LOCK_PATH):
             self._process(force=force)
+        # Always execute callback because multiple processes can have
+        # different versions of blacklists (one before, one after
+        # updating)
+        if callback:
+            callback()
 
 
 def update_builtin_blacklist(

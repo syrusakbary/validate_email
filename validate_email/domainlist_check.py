@@ -1,9 +1,11 @@
 from logging import getLogger
 from typing import Optional
 
+from filelock import FileLock
+
 from .exceptions import DomainBlacklistedError
 from .updater import (
-    BLACKLIST_FILEPATH_INSTALLED, BLACKLIST_FILEPATH_TMP,
+    BLACKLIST_FILEPATH_INSTALLED, BLACKLIST_FILEPATH_TMP, LOCK_PATH,
     update_builtin_blacklist)
 
 SetOrNone = Optional[set]
@@ -30,8 +32,8 @@ class DomainListValidator(object):
     def _blacklist_path(self) -> str:
         'Return the path of the `blacklist.txt` that should be loaded.'
         try:
-            # Zero size, file is touched to indicate the
-            # preinstalled file is still fresh enough
+            # Zero size: file is touched to indicate the preinstalled
+            # file is still fresh enough
             return BLACKLIST_FILEPATH_INSTALLED \
                 if BLACKLIST_FILEPATH_TMP.stat().st_size == 0 \
                 else BLACKLIST_FILEPATH_TMP
@@ -42,13 +44,14 @@ class DomainListValidator(object):
         '(Re)load our built-in blacklist.'
         if not self._is_builtin_bl_used:
             return
-        bl_path = self._blacklist_path
-        LOGGER.debug(msg=f'(Re)loading blacklist: {bl_path}')
-        try:
-            with open(bl_path) as fd:
-                lines = fd.readlines()
-        except FileNotFoundError:
-            return
+        with FileLock(lock_file=LOCK_PATH):
+            bl_path = self._blacklist_path
+            LOGGER.debug(msg=f'(Re)loading blacklist from {bl_path}')
+            try:
+                with open(bl_path) as fd:
+                    lines = fd.readlines()
+            except FileNotFoundError:
+                return
         self.domain_blacklist = set(
             x.strip().lower() for x in lines if x.strip())
 
