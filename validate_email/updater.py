@@ -19,6 +19,7 @@ BLACKLIST_URL = (
     'https://raw.githubusercontent.com/martenson/disposable-email-domains/'
     'master/disposable_email_blocklist.conf')
 LIB_PATH_DEFAULT = Path(__file__).resolve().parent.joinpath('data')
+LIB_PATH_DEFAULT.mkdir(exist_ok=True)
 BLACKLIST_FILEPATH_INSTALLED = LIB_PATH_DEFAULT.joinpath('blacklist.txt')
 BLACKLIST_FILEPATH_TMP = TMP_PATH.joinpath('blacklist.txt')
 ETAG_FILEPATH_INSTALLED = LIB_PATH_DEFAULT.joinpath('blacklist.etag.txt')
