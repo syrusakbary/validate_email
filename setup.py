@@ -6,7 +6,6 @@ from tempfile import mkdtemp
 from setuptools import find_packages, setup
 from setuptools.command.build_py import build_py
 from setuptools.command.develop import develop
-from setuptools.command.install import install
 from setuptools.command.sdist import sdist
 
 try:
@@ -15,7 +14,14 @@ try:
 except ImportError:
     from sys import executable
 
-_DEPENDENCIES = ['dnspython>=1.16.0', 'idna>=2.8', 'filelock>=3.0.12']
+_EGG_REQ_PATH = Path(__file__).parent.joinpath(
+    'py3_validate_email.egg-info', 'requires.txt')
+_REQ_PATH = Path(__file__).parent.joinpath('requirements.txt')
+
+with open(_REQ_PATH if _REQ_PATH.exists() else _EGG_REQ_PATH) as fd:
+    _req_content = fd.readlines()
+_DEPENDENCIES = [x.strip() for x in _req_content if x.strip()]
+
 with open(Path(__file__).parent.joinpath('README.rst')) as fd:
     _LONG_DESC = fd.read()
 
@@ -33,16 +39,6 @@ def run_initial_updater():
     blacklist_updater = BlacklistUpdater()
     blacklist_updater._is_install_time = _IS_VALIDATEEMAIL_SETUP
     blacklist_updater.process(force=True)
-
-
-class InstallCommand(install):
-    'Install command.'
-
-    def run(self):
-        if self.dry_run:
-            return super().run()
-        run_initial_updater()
-        super().run()
 
 
 class DevelopCommand(develop):
@@ -105,7 +101,6 @@ setup(
     keywords='email validation verification mx verify',
     url='http://github.com/karolyi/py3-validate-email',
     cmdclass=dict(
-        develop=DevelopCommand, sdist=SdistCommand,
-        build_py=BuildPyCommand),
+        develop=DevelopCommand, sdist=SdistCommand, build_py=BuildPyCommand),
     license='LGPL',
 )
