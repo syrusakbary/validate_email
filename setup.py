@@ -4,6 +4,7 @@ from subprocess import check_call
 from tempfile import mkdtemp
 
 from setuptools import find_packages, setup
+from setuptools.command.build_py import build_py
 from setuptools.command.develop import develop
 from setuptools.command.install import install
 from setuptools.command.sdist import sdist
@@ -19,23 +20,28 @@ with open(Path(__file__).parent.joinpath('README.rst')) as fd:
     _LONG_DESC = fd.read()
 
 
+def run_initial_updater():
+    'Download an initial blacklist.txt on install time.'
+    # Install dependencies so the initial update can run
+    check_call([executable, '-m', 'pip', 'install'] + _DEPENDENCIES)
+    # The updater will walk code stack frames and see if this
+    # variable is set in locals() to determine if it is run from the
+    # setup, in which case it won't autoupdate.
+    _IS_VALIDATEEMAIL_SETUP = True
+    from validate_email.updater import BlacklistUpdater, LIB_PATH_DEFAULT
+    LIB_PATH_DEFAULT.mkdir(exist_ok=True)
+    blacklist_updater = BlacklistUpdater()
+    blacklist_updater._is_install_time = _IS_VALIDATEEMAIL_SETUP
+    blacklist_updater.process(force=True)
+
+
 class InstallCommand(install):
     'Install command.'
 
     def run(self):
         if self.dry_run:
             return super().run()
-        # Install dependencies so the initial update can run
-        check_call([executable, '-m', 'pip', 'install'] + _DEPENDENCIES)
-        # The updater will walk code stack frames and see if this
-        # variable is set in locals() to determine if it is run from the
-        # setup, in which case it won't autoupdate.
-        _IS_VALIDATEEMAIL_SETUP = True
-        from validate_email.updater import BlacklistUpdater, LIB_PATH_DEFAULT
-        LIB_PATH_DEFAULT.mkdir(exist_ok=True)
-        blacklist_updater = BlacklistUpdater()
-        blacklist_updater._is_install_time = _IS_VALIDATEEMAIL_SETUP
-        blacklist_updater.process(force=True)
+        run_initial_updater()
         super().run()
 
 
@@ -45,17 +51,7 @@ class DevelopCommand(develop):
     def run(self):
         if self.dry_run:
             return super().run()
-        # Install dependencies so the initial update can run
-        check_call([executable, '-m', 'pip', 'install'] + _DEPENDENCIES)
-        # The updater will walk code stack frames and see if this
-        # variable is set in locals() to determine if it is run from the
-        # setup, in which case it won't autoupdate.
-        _IS_VALIDATEEMAIL_SETUP = True
-        from validate_email.updater import BlacklistUpdater, LIB_PATH_DEFAULT
-        LIB_PATH_DEFAULT.mkdir(exist_ok=True)
-        blacklist_updater = BlacklistUpdater()
-        blacklist_updater._is_install_time = _IS_VALIDATEEMAIL_SETUP
-        blacklist_updater.process(force=True)
+        run_initial_updater()
         super().run()
 
 
@@ -84,13 +80,24 @@ class SdistCommand(sdist):
             rmtree(path=tempdir.parent)
 
 
+class BuildPyCommand(build_py):
+    'BuildPy command.'
+
+    def run(self):
+        if self.dry_run:
+            return super().run()
+        run_initial_updater()
+        super().run()
+
+
 setup(
     name='py3-validate-email',
-    version='0.2.4',
+    version='0.2.5',
     packages=find_packages(exclude=['tests']),
     install_requires=_DEPENDENCIES,
     author='László Károlyi',
     author_email='laszlo@karolyi.hu',
+    include_package_data=True,
     description=(
         'Email validator with regex, blacklisted domains and SMTP checking.'),
     long_description=_LONG_DESC,
@@ -98,6 +105,7 @@ setup(
     keywords='email validation verification mx verify',
     url='http://github.com/karolyi/py3-validate-email',
     cmdclass=dict(
-        develop=DevelopCommand, install=InstallCommand, sdist=SdistCommand),
+        develop=DevelopCommand, sdist=SdistCommand,
+        build_py=BuildPyCommand),
     license='LGPL',
 )

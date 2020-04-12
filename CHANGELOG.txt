@@ -1,3 +1,7 @@
+0.2.5:
+- Python distutils/setuptools is a mess. Fix data dir creation on
+  install.
+
 0.2.4:
 - Fixed built-in datadir creation again.
 
