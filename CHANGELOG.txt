@@ -1,3 +1,9 @@
+0.2.2:
+- Fixed the automatic download of the validate_email/data directory on
+  package install time. The source distribution MUST NOT include the
+  data directory, local installs have to fetch them when they are
+  executed.
+
 0.2.1:
 - Added a validate_email_or_fail function that will raise an exception
   (base class validate_email.exceptions.EmailValidationError) when the

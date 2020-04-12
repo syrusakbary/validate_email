@@ -3,8 +3,6 @@ include LICENSE
 include README.rst
 include CHANGELOG.txt
 recursive-include validate_email *
-prune tests
-prune validate_email/data
 recursive-exclude tests *
 recursive-exclude * __pycache__
 recursive-exclude * *.pyc
