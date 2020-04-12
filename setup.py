@@ -31,7 +31,8 @@ class InstallCommand(install):
         # variable is set in locals() to determine if it is run from the
         # setup, in which case it won't autoupdate.
         _IS_VALIDATEEMAIL_SETUP = True
-        from validate_email.updater import BlacklistUpdater
+        from validate_email.updater import BlacklistUpdater, LIB_PATH_DEFAULT
+        LIB_PATH_DEFAULT.mkdir(exist_ok=True)
         blacklist_updater = BlacklistUpdater()
         blacklist_updater._is_install_time = _IS_VALIDATEEMAIL_SETUP
         blacklist_updater.process(force=True)
@@ -50,7 +51,8 @@ class DevelopCommand(develop):
         # variable is set in locals() to determine if it is run from the
         # setup, in which case it won't autoupdate.
         _IS_VALIDATEEMAIL_SETUP = True
-        from validate_email.updater import BlacklistUpdater
+        from validate_email.updater import BlacklistUpdater, LIB_PATH_DEFAULT
+        LIB_PATH_DEFAULT.mkdir(exist_ok=True)
         blacklist_updater = BlacklistUpdater()
         blacklist_updater._is_install_time = _IS_VALIDATEEMAIL_SETUP
         blacklist_updater.process(force=True)
@@ -84,7 +86,7 @@ class SdistCommand(sdist):
 
 setup(
     name='py3-validate-email',
-    version='0.2.2',
+    version='0.2.4',
     packages=find_packages(exclude=['tests']),
     install_requires=_DEPENDENCIES,
     author='László Károlyi',
