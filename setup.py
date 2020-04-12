@@ -6,7 +6,7 @@ from setuptools.command.develop import develop
 from setuptools.command.install import install
 
 try:
-    # OSX Homebrew fix
+    # OSX Homebrew fix: https://stackoverflow.com/a/53190037/1067833
     from sys import _base_executable as executable
 except ImportError:
     from sys import executable
