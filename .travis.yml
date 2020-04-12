@@ -13,7 +13,8 @@ install:
   - python -m pip install -U pip wheel setuptools
   - python -m pip install -U isort flake8
   - python -m pip install -r requirements.txt
-  - python -m pip install -e .
+  - python -Wd setup.py sdist
+  - python -Wd -m pip install dist/py3-validate-email-*.tar.gz
 
 # command to run tests
 script:
