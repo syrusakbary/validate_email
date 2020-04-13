@@ -2,7 +2,9 @@ from logging import getLogger
 from typing import Optional
 
 from .domainlist_check import domainlist_check
-from .exceptions import AddressFormatError, EmailValidationError
+from .email_address import EmailAddress
+from .exceptions import (
+    AddressFormatError, EmailValidationError, FromAddressFormatError)
 from .mx_check import mx_check
 from .regex_check import regex_check
 
@@ -19,13 +21,17 @@ def validate_email_or_fail(
     validation result is ambigious, and raise an exception if the validation
     fails.
     """
-    if not email_address or '@' not in email_address:
-        raise AddressFormatError
-    user_part, domain_part = email_address.rsplit('@', 1)
+    email_address = EmailAddress(email_address)
+    if from_address is not None:
+        try:
+            from_address = EmailAddress(from_address)
+        except AddressFormatError:
+            raise FromAddressFormatError
+
     if check_regex:
-        regex_check(user_part=user_part, domain_part=domain_part)
+        regex_check(email_address)
     if use_blacklist:
-        domainlist_check(user_part=user_part, domain_part=domain_part)
+        domainlist_check(email_address)
     if not check_mx:
         return True
     return mx_check(

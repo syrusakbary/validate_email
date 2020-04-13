@@ -14,6 +14,14 @@ class AddressFormatError(EmailValidationError):
     message = 'Invalid email address.'
 
 
+class FromAddressFormatError(EmailValidationError):
+    """
+    Raised when the from email address used for the MX check has an
+    invalid format.
+    """
+    message = 'Invalid "From:" email address.'
+
+
 class DomainBlacklistedError(EmailValidationError):
     """
     Raised when the domain of the email address is blacklisted on

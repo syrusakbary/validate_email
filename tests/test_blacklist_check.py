@@ -2,6 +2,7 @@ from unittest.case import TestCase
 
 from validate_email.domainlist_check import (
     domainlist_check, update_builtin_blacklist)
+from validate_email.email_address import EmailAddress
 from validate_email.exceptions import DomainBlacklistedError
 from validate_email.validate_email import (
     validate_email, validate_email_or_fail)
@@ -16,7 +17,7 @@ class BlacklistCheckTestCase(TestCase):
     def test_blacklist_positive(self):
         'Disallows blacklist item: mailinator.com.'
         with self.assertRaises(DomainBlacklistedError):
-            domainlist_check(user_part='pa2', domain_part='mailinator.com')
+            domainlist_check(EmailAddress('pa2@mailinator.com'))
         with self.assertRaises(DomainBlacklistedError):
             validate_email_or_fail(
                 email_address='pa2@mailinator.com', check_regex=False,
@@ -37,5 +38,4 @@ class BlacklistCheckTestCase(TestCase):
     def test_blacklist_negative(self):
         'Allows a domain not in the blacklist.'
         self.assertTrue(expr=domainlist_check(
-            user_part='pa2',
-            domain_part='some-random-domain-thats-not-blacklisted.com'))
+            EmailAddress('pa2@some-random-domain-thats-not-blacklisted.com')))
