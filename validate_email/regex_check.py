@@ -1,10 +1,8 @@
 from ipaddress import IPv4Address, IPv6Address
-from typing import Optional
 
 from .constants import HOST_REGEX, LITERAL_REGEX, USER_REGEX
+from .email_address import EmailAddress
 from .exceptions import AddressFormatError
-
-SetOrNone = Optional[set]
 
 
 def _validate_ipv4_address(value: str):
@@ -27,41 +25,26 @@ def _validate_ipv6_address(value: str) -> bool:
 
 
 def _validate_ipv46_address(value: str) -> bool:
-    if _validate_ipv4_address(value):
-        return True
-    return _validate_ipv6_address(value)
+    return _validate_ipv4_address(value) or _validate_ipv6_address(value)
 
 
-class RegexValidator(object):
+def regex_check(address: EmailAddress) -> bool:
     'Slightly adjusted email regex checker from the Django project.'
 
-    def __call__(
-            self, user_part: str, domain_part: str,
-            use_blacklist: bool = True) -> bool:
-        if not USER_REGEX.match(user_part):
-            raise AddressFormatError
+    # Validate user part.
+    if not USER_REGEX.match(address.user):
+        raise AddressFormatError
 
-        if not self.validate_domain_part(domain_part):
-            # Try for possible IDN domain-part
-            try:
-                domain_part = domain_part.encode('idna').decode('ascii')
-            except UnicodeError:
-                pass
-            else:
-                if self.validate_domain_part(domain_part):
-                    return True
-            raise AddressFormatError
+    # Validate domain part: a) hostname.
+    if HOST_REGEX.match(address.ace_domain):
         return True
 
-    def validate_domain_part(self, domain_part: str):
-        if HOST_REGEX.match(domain_part):
+    # Validate domain part: b) literal IP address.
+    literal_match = LITERAL_REGEX.match(address.ace_domain)
+    if literal_match:
+        ip_address = literal_match.group(1)
+        if _validate_ipv46_address(ip_address):
             return True
 
-        literal_match = LITERAL_REGEX.match(domain_part)
-        if literal_match:
-            ip_address = literal_match.group(1)
-            return _validate_ipv46_address(ip_address)
-        return False
-
-
-regex_check = RegexValidator()
+    # Domain part not successfully validated.
+    raise AddressFormatError

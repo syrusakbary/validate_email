@@ -1,41 +1,19 @@
-from functools import lru_cache
 from smtplib import SMTP, SMTPServerDisconnected
 from socket import error as SocketError
 from socket import gethostname
-from typing import Optional, Tuple
+from typing import Optional
 
 from dns.exception import Timeout
 from dns.rdatatype import MX as rdtype_mx
 from dns.rdtypes.ANY.MX import MX
 from dns.resolver import (
     NXDOMAIN, YXDOMAIN, Answer, NoAnswer, NoNameservers, query)
-from idna.core import IDNAError, encode
 
-from .constants import EMAIL_EXTRACT_HOST_REGEX, HOST_REGEX
+from .constants import HOST_REGEX
+from .email_address import EmailAddress
 from .exceptions import (
-    AddressFormatError, AddressNotDeliverableError, DNSConfigurationError,
-    DNSTimeoutError, DomainNotFoundError, NoMXError, NoNameserverError,
-    NoValidMXError)
-
-
-@lru_cache(maxsize=10)
-def _dissect_email(email_address: str) -> Tuple[str, str]:
-    'Return a tuple of the user and domain part.'
-    try:
-        domain = EMAIL_EXTRACT_HOST_REGEX.search(string=email_address)[1]
-    except TypeError:
-        raise AddressFormatError
-    except IndexError:
-        raise AddressFormatError
-    return email_address[:-(len(domain) + 1)], domain
-
-
-@lru_cache(maxsize=10)
-def _get_idna_address(email_address: str) -> str:
-    'Return an IDNA converted email address.'
-    user, domain = _dissect_email(email_address=email_address)
-    idna_resolved_domain = encode(s=domain).decode('ascii')
-    return f'{user}@{idna_resolved_domain}'
+    AddressNotDeliverableError, DNSConfigurationError, DNSTimeoutError,
+    DomainNotFoundError, NoMXError, NoNameserverError, NoValidMXError)
 
 
 def _get_mx_records(domain: str, timeout: int) -> list:
@@ -68,7 +46,7 @@ def _get_mx_records(domain: str, timeout: int) -> list:
 
 def _check_one_mx(
         smtp: SMTP, error_messages: list, mx_record: str, helo_host: str,
-        from_address: str, email_address: str) -> bool:
+        from_address: EmailAddress, email_address: EmailAddress) -> bool:
     """
     Check one MX server, return the `is_ambigious` boolean or raise
     `StopIteration` if this MX accepts the email.
@@ -76,8 +54,8 @@ def _check_one_mx(
     try:
         smtp.connect(host=mx_record)
         smtp.helo(name=helo_host)
-        smtp.mail(sender=from_address)
-        code, message = smtp.rcpt(recip=email_address)
+        smtp.mail(sender=from_address.ace)
+        code, message = smtp.rcpt(recip=email_address.ace)
         smtp.quit()
     except SMTPServerDisconnected:
         return True
@@ -96,8 +74,8 @@ def _check_one_mx(
 
 
 def _check_mx_records(
-    mx_records: list, smtp_timeout: int, helo_host: str, from_address: str,
-    email_address: str
+    mx_records: list, smtp_timeout: int, helo_host: str,
+    from_address: EmailAddress, email_address: EmailAddress
 ) -> Optional[bool]:
     'Check the mx records for a given email address.'
     smtp = SMTP(timeout=smtp_timeout)
@@ -119,7 +97,7 @@ def _check_mx_records(
 
 
 def mx_check(
-    email_address: str, from_address: Optional[str] = None,
+    email_address: EmailAddress, from_address: Optional[EmailAddress] = None,
     helo_host: Optional[str] = None, smtp_timeout: int = 10,
     dns_timeout: int = 10
 ) -> Optional[bool]:
@@ -130,13 +108,9 @@ def mx_check(
     (e.g. temporary errors or graylisting).
     """
     host = helo_host or gethostname()
-    idna_from = _get_idna_address(email_address=from_address or email_address)
-    try:
-        idna_to = _get_idna_address(email_address=email_address)
-    except IDNAError:
-        raise AddressFormatError
-    _user, domain = _dissect_email(email_address=email_address)
-    mx_records = _get_mx_records(domain=domain, timeout=dns_timeout)
+    from_address = from_address or email_address
+    mx_records = _get_mx_records(
+        domain=email_address.domain, timeout=dns_timeout)
     return _check_mx_records(
         mx_records=mx_records, smtp_timeout=smtp_timeout, helo_host=host,
-        from_address=idna_from, email_address=idna_to)
+        from_address=from_address, email_address=email_address)

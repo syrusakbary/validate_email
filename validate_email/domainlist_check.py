@@ -3,6 +3,7 @@ from typing import Optional
 
 from filelock import FileLock
 
+from .email_address import EmailAddress
 from .exceptions import DomainBlacklistedError
 from .updater import (
     BLACKLIST_FILEPATH_INSTALLED, BLACKLIST_FILEPATH_TMP, LOCK_PATH,
@@ -55,11 +56,11 @@ class DomainListValidator(object):
         self.domain_blacklist = set(
             x.strip().lower() for x in lines if x.strip())
 
-    def __call__(self, user_part: str, domain_part: str) -> bool:
+    def __call__(self, address: EmailAddress) -> bool:
         'Do the checking here.'
-        if domain_part in self.domain_whitelist:
+        if address.domain in self.domain_whitelist:
             return True
-        if domain_part in self.domain_blacklist:
+        if address.domain in self.domain_blacklist:
             raise DomainBlacklistedError
         return True
 

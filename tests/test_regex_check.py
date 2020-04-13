@@ -1,8 +1,8 @@
 from unittest.case import TestCase
 
+from validate_email.email_address import EmailAddress
 from validate_email.exceptions import AddressFormatError
 from validate_email.regex_check import regex_check
-from validate_email.validate_email import validate_email
 
 VALID_EXAMPLES = [
     'email@domain.com',  # basic valid email
@@ -35,11 +35,6 @@ INVALID_EXAMPLES = [
     'email@domain..com',  # multiple dot in the domain portion is invalid
 ]
 
-UNPARSEABLE_EXAMPLES = [
-    'plainaddress',  # missing @ sign and domain
-    'email.domain.com',  # missing @
-]
-
 
 class FormatValidity(TestCase):
     'Testing regex validation + format validity.'
@@ -47,21 +42,14 @@ class FormatValidity(TestCase):
     def test_valid_email_structure_regex(self):
         'Accepts an email with a valid structure.'
         for address in VALID_EXAMPLES:
-            user_part, domain_part = address.rsplit('@', 1)
             self.assertTrue(
-                expr=regex_check(user_part=user_part, domain_part=domain_part),
+                expr=regex_check(EmailAddress(address)),
                 msg=f'Check is not true with {address}')
 
     def test_invalid_email_structure_regex(self):
         'Rejects an email with an invalid structure.'
         for address in INVALID_EXAMPLES:
-            user_part, domain_part = address.rsplit('@', 1)
             with self.assertRaises(
                     expected_exception=AddressFormatError,
                     msg=f'Test failed for {address}'):
-                regex_check(user_part=user_part, domain_part=domain_part),
-
-    def test_unparseable_email(self):
-        'Rejects an unparseable email.'
-        for address in UNPARSEABLE_EXAMPLES:
-            self.assertFalse(expr=validate_email(email_address=address))
+                regex_check(EmailAddress(address))
