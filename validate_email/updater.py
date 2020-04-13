@@ -119,7 +119,7 @@ class BlacklistUpdater(object):
         except HTTPError as exc:
             if exc.code == 304:
                 # Not modified, update date on the tmp file
-                LOGGER.debug(msg=f'Local file is fresh enough (same ETag).')
+                LOGGER.debug(msg='Local file is fresh enough (same ETag).')
                 BLACKLIST_FILEPATH_TMP.touch()
                 return
             raise
