@@ -88,7 +88,7 @@ class BuildPyCommand(build_py):
 
 setup(
     name='py3-validate-email',
-    version='0.2.5',
+    version='0.2.6',
     packages=find_packages(exclude=['tests']),
     install_requires=_DEPENDENCIES,
     author='László Károlyi',
