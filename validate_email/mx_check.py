@@ -109,8 +109,11 @@ def mx_check(
     """
     host = helo_host or gethostname()
     from_address = from_address or email_address
-    mx_records = _get_mx_records(
-        domain=email_address.domain, timeout=dns_timeout)
+    if email_address.domain_literal_ip:
+        mx_records = [email_address.domain_literal_ip]
+    else:
+        mx_records = _get_mx_records(
+            domain=email_address.domain, timeout=dns_timeout)
     return _check_mx_records(
         mx_records=mx_records, smtp_timeout=smtp_timeout, helo_host=host,
         from_address=from_address, email_address=email_address)
