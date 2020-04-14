@@ -1,3 +1,8 @@
+0.2.7:
+- Increase consistency at handling domain literals
+- Clean up initial blacklist download on install
+- All improvements made by @reinhard-mueller.
+
 0.2.6:
 - Introducing an EmailAddress class, thx to @reinhard-mueller
 - Added a test for making sure there's a data directory with blacklist

@@ -52,7 +52,7 @@ class EmailAddress(object):
     def domain_literal_ip(self) -> Optional[str]:
         """
         If the domain part of the email address is a literal IP address
-        enclosed in brackets, that IP address (without the brakcets) is
+        enclosed in brackets, that IP address (without the brackets) is
         returned. Otherwise, `None` is returned.
         """
         if self._domain.startswith('[') and self._domain.endswith(']'):
