@@ -1,3 +1,5 @@
+from typing import Optional
+
 from idna.core import IDNAError, encode
 
 from .exceptions import AddressFormatError
@@ -22,7 +24,7 @@ class EmailAddress(object):
             raise AddressFormatError
 
         # Convert internationalized domain name into the ACE encoding
-        if self._domain.startswith('[') and self._domain.endswith(']'):
+        if self.domain_literal_ip:
             self._ace_domain = self._domain
         else:
             try:
@@ -45,6 +47,16 @@ class EmailAddress(object):
         "@" sign.
         """
         return self._domain
+
+    @property
+    def domain_literal_ip(self) -> Optional[str]:
+        """
+        If the domain part of the email address is a literal IP address
+        enclosed in brackets, that IP address (without the brakcets) is
+        returned. Otherwise, `None` is returned.
+        """
+        if self._domain.startswith('[') and self._domain.endswith(']'):
+            return self._domain[1:-1]
 
     @property
     def ace(self) -> str:
