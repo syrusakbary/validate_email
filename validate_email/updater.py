@@ -9,10 +9,6 @@ from typing import Callable, Optional
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
-from filelock import FileLock
-
-from .utils import is_setuptime
-
 LOGGER = getLogger(__name__)
 TMP_PATH = Path(gettempdir()).joinpath(
     f'{gettempprefix()}-py3-validate-email-{geteuid()}')
@@ -37,57 +33,30 @@ class BlacklistUpdater(object):
     """
 
     _refresh_when_older_than: int = 5 * 24 * 60 * 60  # 5 days
-    _is_install_time: bool = False
-
-    @property
-    def _etag_filepath(self) -> str:
-        'Return the ETag file path to use.'
-        return ETAG_FILEPATH_INSTALLED \
-            if self._is_install_time else ETAG_FILEPATH_TMP
-
-    @property
-    def _blacklist_filepath(self) -> str:
-        'Return the blacklist file path to use.'
-        return BLACKLIST_FILEPATH_INSTALLED \
-            if self._is_install_time else BLACKLIST_FILEPATH_TMP
 
     def _read_etag(self) -> Optional[str]:
         'Read the etag header from the stored etag file when exists.'
         for path in [ETAG_FILEPATH_TMP, ETAG_FILEPATH_INSTALLED]:
             try:
-                with open(path) as fd:
-                    return fd.read().strip()
+                return path.read_text().strip()
             except FileNotFoundError:
                 pass
-
-    def _write_etag(self, content: str):
-        'Write the etag of the newly received file to the cache.'
-        path = self._etag_filepath
-        LOGGER.debug(msg=f'Storing ETag response into {path}.')
-        with open(path, 'w') as fd:
-            fd.write(content)
 
     @property
     def _is_old(self) -> bool:
         'Return `True` if the locally stored file is old.'
         true_when_older_than = time() - self._refresh_when_older_than
-        try:
-            ctime = BLACKLIST_FILEPATH_TMP.stat().st_ctime
-            if ctime >= true_when_older_than:
-                # Downloaded tmp file is still fresh enough
-                return False
-        except FileNotFoundError:
-            pass
-        try:
-            ctime = BLACKLIST_FILEPATH_INSTALLED.stat().st_ctime
-        except FileNotFoundError:
-            return True
-        return ctime < true_when_older_than
+        for path in [BLACKLIST_FILEPATH_TMP, BLACKLIST_FILEPATH_INSTALLED]:
+            try:
+                return path.stat().st_ctime < true_when_older_than
+            except FileNotFoundError:
+                pass
+        return True  # no file found at all
 
     def _get_headers(self, force_update: bool = False) -> dict:
         'Compile a header with etag if available.'
         headers = dict()
-        if force_update or self._is_install_time:
+        if force_update:
             return headers
         etag = self._read_etag()
         if not etag:
@@ -95,31 +64,44 @@ class BlacklistUpdater(object):
         headers['If-None-Match'] = etag
         return headers
 
-    def _write_new_file(self, response: HTTPResponse):
-        'Write new data file on its arrival.'
+    def _download(self, headers: dict, blacklist_path: Path, etag_path: Path):
+        'Downlad and store blacklist file.'
+        LOGGER.debug(msg=f'Checking {BLACKLIST_URL}')
+        request = Request(url=BLACKLIST_URL, headers=headers)
+        response = urlopen(url=request)  # type: HTTPResponse
+        # New data available
+        LOGGER.debug(msg=f'Writing response into {blacklist_path}')
+        blacklist_path.write_bytes(response.fp.read())
         if 'ETag' in response.headers:
-            self._write_etag(response.headers.get('ETag'))
-        path = self._blacklist_filepath
-        LOGGER.debug(msg=f'Writing response into {path}')
-        with open(path, 'wb') as fd:
-            fd.write(response.fp.read())
+            LOGGER.debug(msg=f'Storing ETag response into {etag_path}.')
+            etag_path.write_text(response.headers['ETag'])
+
+    def _install(self):
+        """
+        Download and store the blacklist file and the matching etag file
+        into the library path. This is executed from setup.py upon
+        installation of the library. Don't call this in your
+        application.
+        """
+        LIB_PATH_DEFAULT.mkdir(exist_ok=True)
+        self._download(
+                headers={}, blacklist_path=BLACKLIST_FILEPATH_INSTALLED,
+                etag_path=ETAG_FILEPATH_INSTALLED)
 
     def _process(self, force: bool = False):
         'Start optionally updating the blacklist.txt file, while locked.'
         if not force and not self._is_old:
             LOGGER.debug(msg='Not updating because file is fresh enough.')
             return
-        LOGGER.debug(msg=f'Checking {BLACKLIST_URL}')
-        request = Request(
-            url=BLACKLIST_URL, headers=self._get_headers(force_update=force))
         try:
-            response = urlopen(url=request)  # type: HTTPResponse
-            # New data available
-            self._write_new_file(response=response)
+            self._download(
+                headers=self._get_headers(force_update=force),
+                blacklist_path=BLACKLIST_FILEPATH_TMP,
+                etag_path=ETAG_FILEPATH_TMP)
         except HTTPError as exc:
             if exc.code == 304:
                 # Not modified, update date on the tmp file
-                LOGGER.debug(msg=f'Local file is fresh enough (same ETag).')
+                LOGGER.debug(msg='Local file is fresh enough (same ETag).')
                 BLACKLIST_FILEPATH_TMP.touch()
                 return
             raise
@@ -128,6 +110,8 @@ class BlacklistUpdater(object):
             self, force: bool = False, callback: Optional[Callable] = None):
         'Start optionally updating the blacklist.txt file.'
         # Locking to avoid multi-process update on multi-process startup
+        # Import filelock locally because this module is als used by setup.py
+        from filelock import FileLock
         with FileLock(lock_file=LOCK_PATH):
             self._process(force=force)
         # Always execute callback because multiple processes can have
@@ -144,8 +128,6 @@ def update_builtin_blacklist(
     Update and reload the built-in blacklist. Return the `Thread` used
     to do the background update, so it can be `join()`-ed.
     """
-    if is_setuptime():
-        return
     LOGGER.info(msg='Starting optional update of built-in blacklist.')
     blacklist_updater = BlacklistUpdater()
     kwargs = dict(force=force, callback=callback)

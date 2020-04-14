@@ -2,7 +2,6 @@ include AUTHORS
 include LICENSE
 include README.rst
 include CHANGELOG.txt
-recursive-include validate_email *
 recursive-exclude tests *
 recursive-exclude * __pycache__
 recursive-exclude * *.pyc

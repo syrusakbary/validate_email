@@ -1,106 +1,72 @@
+import sys
+from distutils import log
 from pathlib import Path
-from shutil import move, rmtree
-from subprocess import check_call
-from tempfile import mkdtemp
 
 from setuptools import find_packages, setup
 from setuptools.command.build_py import build_py
 from setuptools.command.develop import develop
-from setuptools.command.sdist import sdist
-
-try:
-    # OSX Homebrew fix: https://stackoverflow.com/a/53190037/1067833
-    from sys import _base_executable as executable
-except ImportError:
-    from sys import executable
-
-_EGG_REQ_PATH = Path(__file__).parent.joinpath(
-    'py3_validate_email.egg-info', 'requires.txt')
-_REQ_PATH = Path(__file__).parent.joinpath('requirements.txt')
-
-with open(_REQ_PATH if _REQ_PATH.exists() else _EGG_REQ_PATH) as fd:
-    _req_content = fd.readlines()
-_DEPENDENCIES = [x.strip() for x in _req_content if x.strip()]
-
-with open(Path(__file__).parent.joinpath('README.rst')) as fd:
-    _LONG_DESC = fd.read()
 
 
-def run_initial_updater():
+def run_initial_updater(path: Path):
     'Download an initial blacklist.txt on install time.'
-    # Install dependencies so the initial update can run
-    check_call([executable, '-m', 'pip', 'install'] + _DEPENDENCIES)
-    # The updater will walk code stack frames and see if this
-    # variable is set in locals() to determine if it is run from the
-    # setup, in which case it won't autoupdate.
-    _IS_VALIDATEEMAIL_SETUP = True
-    from validate_email.updater import BlacklistUpdater, LIB_PATH_DEFAULT
-    LIB_PATH_DEFAULT.mkdir(exist_ok=True)
-    blacklist_updater = BlacklistUpdater()
-    blacklist_updater._is_install_time = _IS_VALIDATEEMAIL_SETUP
-    blacklist_updater.process(force=True)
+    # Only import the updater module to avoid requiring all the dependencies
+    # and auto-running the updater.
+    sys.path.append(str(path.joinpath('validate_email')))
+    orig_dont_write_bytecode = sys.dont_write_bytecode
+    sys.dont_write_bytecode = True
+    try:
+        from updater import BLACKLIST_FILEPATH_INSTALLED, BlacklistUpdater
+        log.info(f'downloading blacklist to {BLACKLIST_FILEPATH_INSTALLED}')
+        BlacklistUpdater()._install()
+    finally:
+        sys.path = sys.path[:-1]
+        sys.dont_write_bytecode = orig_dont_write_bytecode
 
 
 class DevelopCommand(develop):
-    'Develop command.'
+    """
+    Adapted version of the 'develop' command.
+
+    After finishing the usual build run, download the blacklist and
+    store it into the source directory, because that is from where the
+    library will run in a developer install.
+    """
 
     def run(self):
-        if self.dry_run:
-            return super().run()
-        run_initial_updater()
         super().run()
-
-
-class SdistCommand(sdist):
-    'Sdist command.'
-
-    def run(self):
-        """
-        Manually remove the data directory before creating the
-        distribution package, every install will create it for
-        themselves when installing created the python wheel.
-        `MANIFEST.in` should not remove the data dir since install and
-        develop/install would exclude it!
-        """
-        if self.dry_run:
-            return super().run()
-        tempdir = Path(mkdtemp()).joinpath('data')
-        data_dir = Path(
-            __file__).absolute().parent.joinpath('validate_email', 'data')
-        do_move = data_dir.exists()
-        if do_move:
-            move(src=data_dir, dst=tempdir)
-        super().run()
-        if do_move:
-            move(src=tempdir, dst=data_dir)
-            rmtree(path=tempdir.parent)
+        if not self.dry_run:
+            run_initial_updater(Path(__file__).parent)
 
 
 class BuildPyCommand(build_py):
-    'BuildPy command.'
+    """
+    Adapted version of the 'build_py' command.
+
+    After finishing the usual build run, download the blacklist and
+    store it into the build directory. A subsequent 'install' step will
+    copy the full contents of the build directory to the install
+    target, thus including the blacklist.
+    """
 
     def run(self):
-        if self.dry_run:
-            return super().run()
-        run_initial_updater()
         super().run()
+        if not self.dry_run:
+            run_initial_updater(Path(self.build_lib))
 
 
 setup(
     name='py3-validate-email',
     version='0.2.6',
     packages=find_packages(exclude=['tests']),
-    install_requires=_DEPENDENCIES,
+    install_requires=['dnspython~=1.16', 'idna~=2.8', 'filelock~=3.0'],
     author='László Károlyi',
     author_email='laszlo@karolyi.hu',
-    include_package_data=True,
     description=(
         'Email validator with regex, blacklisted domains and SMTP checking.'),
-    long_description=_LONG_DESC,
+    long_description=Path(__file__).parent.joinpath('README.rst').read_text(),
     long_description_content_type='text/x-rst',
     keywords='email validation verification mx verify',
     url='http://github.com/karolyi/py3-validate-email',
-    cmdclass=dict(
-        develop=DevelopCommand, sdist=SdistCommand, build_py=BuildPyCommand),
+    cmdclass=dict(build_py=BuildPyCommand, develop=DevelopCommand),
     license='LGPL',
 )
