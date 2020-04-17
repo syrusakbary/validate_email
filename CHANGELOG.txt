@@ -1,3 +1,6 @@
+0.2.8:
+- Fixing windows installation error.
+
 0.2.7:
 - Increase consistency at handling domain literals
 - Clean up initial blacklist download on install
