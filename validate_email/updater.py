@@ -1,6 +1,5 @@
 from http.client import HTTPResponse
 from logging import getLogger
-from os import geteuid
 from pathlib import Path
 from tempfile import gettempdir, gettempprefix
 from threading import Thread
@@ -8,6 +7,14 @@ from time import time
 from typing import Callable, Optional
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
+
+try:
+    from os import geteuid
+except ImportError:
+    def geteuid():
+        'Windows does not have `os.geteuid()`.'
+        return '1'
+
 
 LOGGER = getLogger(__name__)
 TMP_PATH = Path(gettempdir()).joinpath(
