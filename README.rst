@@ -79,3 +79,12 @@ Check if you have port 25 access from your IP to the accepting server's IP. Even
 I can't check thousands of emails!
 -----
 This module is a tool; every tool can become a weapon if not used properly. In my case, I use this module to check email address validity at registration time, so not thousands at once. Doing so might make you (your IP) end up in one of the aforementioned blocklists, as providers will detect you as a possible spammer. In short, I would advise against your use case.
+
+My email doesn't check out!
+-----
+Run this code with the module installed (use your parameters within), and see the output:
+
+    python -c 'import logging, sys; logging.basicConfig(stream=sys.stderr, level=logging.DEBUG); from validate_email import validate_email; print(validate_email(\'your.email@address.com\', check_mx=True, debug=True))'
+
+
+If you still don't understand why your code doesn't work as expected by looking at the the logs, then (and only then) add an issue explaining your problem with a REPRODUCIBLE example, and the output of your test run.
