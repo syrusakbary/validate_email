@@ -25,7 +25,7 @@ USAGE
 Basic usage::
 
     from validate_email import validate_email
-    is_valid = validate_email(email_address='example@example.com', check_regex=True, check_mx=True, from_address='my@from.addr.ess', helo_host='my.host.name', smtp_timeout=10, dns_timeout=10, use_blacklist=True)
+    is_valid = validate_email(email_address='example@example.com', check_regex=True, check_mx=True, from_address='my@from.addr.ess', helo_host='my.host.name', smtp_timeout=10, dns_timeout=10, use_blacklist=True, debug=False)
 
 :code:`check_regex` will check will the email address has a valid structure and defaults to True
 
@@ -40,6 +40,8 @@ Basic usage::
 :code:`dns_timeout`: seconds until DNS timeout
 
 :code:`use_blacklist`: use the blacklist of domains downloaded from https://github.com/martenson/disposable-email-domains
+
+:code:`debug`: emit debug messages while checking email
 
 The function :code:`validate_email_or_fail()` works exactly like :code:`validate_email`, except that it raises an exception in the case of validation failure instead of returning :code:`False`.
 

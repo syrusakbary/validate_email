@@ -75,11 +75,12 @@ def _check_one_mx(
 
 def _check_mx_records(
     mx_records: list, smtp_timeout: int, helo_host: str,
-    from_address: EmailAddress, email_address: EmailAddress
+    from_address: EmailAddress, email_address: EmailAddress,
+    debug: bool,
 ) -> Optional[bool]:
     'Check the mx records for a given email address.'
     smtp = SMTP(timeout=smtp_timeout)
-    smtp.set_debuglevel(debuglevel=0)
+    smtp.set_debuglevel(debuglevel=2 if debug else False)
     error_messages = []
     found_ambigious = False
     for mx_record in mx_records:
@@ -97,7 +98,8 @@ def _check_mx_records(
 
 
 def mx_check(
-    email_address: EmailAddress, from_address: Optional[EmailAddress] = None,
+    email_address: EmailAddress, debug: bool,
+    from_address: Optional[EmailAddress] = None,
     helo_host: Optional[str] = None, smtp_timeout: int = 10,
     dns_timeout: int = 10
 ) -> Optional[bool]:
@@ -116,4 +118,4 @@ def mx_check(
             domain=email_address.domain, timeout=dns_timeout)
     return _check_mx_records(
         mx_records=mx_records, smtp_timeout=smtp_timeout, helo_host=host,
-        from_address=from_address, email_address=email_address)
+        from_address=from_address, email_address=email_address, debug=debug)
