@@ -1,3 +1,9 @@
+0.2.10:
+- Adding STARTTLS handling
+- Use EHLO instead of HELO
+- Refactorings to handle errors during EHLO and MAIL FROM commands
+- Updated dependencies
+
 0.2.9:
 - Adding debug command to validate_email for debugging
 

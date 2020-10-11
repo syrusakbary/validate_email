@@ -56,9 +56,9 @@ class BuildPyCommand(build_py):
 
 setup(
     name='py3-validate-email',
-    version='0.2.9',
+    version='0.2.10',
     packages=find_packages(exclude=['tests']),
-    install_requires=['dnspython~=1.16', 'idna~=2.8', 'filelock~=3.0'],
+    install_requires=['dnspython~=2.0', 'idna~=2.10', 'filelock~=3.0'],
     author='László Károlyi',
     author_email='laszlo@karolyi.hu',
     description=(
