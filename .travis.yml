@@ -17,6 +17,6 @@ install:
 
 # command to run tests
 script:
-  - python -m isort -c --skip-glob=venv
+  - python -m isort -c --skip-glob=venv .
   - python -m flake8 tests/ validate_email/ setup.py
   - python -m unittest discover -v -s tests
