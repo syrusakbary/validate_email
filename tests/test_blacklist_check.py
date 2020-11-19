@@ -29,11 +29,11 @@ class BlacklistCheckTestCase(TestCase):
         with self.assertLogs():
             self.assertFalse(expr=validate_email(
                 email_address='pa2@mailinator.com', check_regex=False,
-                use_blacklist=True))
+                use_blacklist=True, debug=True))
         with self.assertLogs():
             self.assertFalse(expr=validate_email(
                 email_address='pa2@mailinator.com', check_regex=True,
-                use_blacklist=True))
+                use_blacklist=True, debug=True))
 
     def test_blacklist_negative(self):
         'Allows a domain not in the blacklist.'
