@@ -135,7 +135,7 @@ def update_builtin_blacklist(
     Update and reload the built-in blacklist. Return the `Thread` used
     to do the background update, so it can be `join()`-ed.
     """
-    LOGGER.info(msg='Starting optional update of built-in blacklist.')
+    LOGGER.debug(msg='Starting optional update of built-in blacklist.')
     blacklist_updater = BlacklistUpdater()
     kwargs = dict(force=force, callback=callback)
     if not background:

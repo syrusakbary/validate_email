@@ -1,3 +1,7 @@
+0.2.11:
+- Make emitting logs off per default, observer the passed `debug` parameter
+- Set updater log level to debug
+
 0.2.10:
 - Adding STARTTLS handling
 - Use EHLO instead of HELO

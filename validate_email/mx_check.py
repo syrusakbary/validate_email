@@ -62,7 +62,6 @@ def _smtp_ehlo_tls(smtp: SMTP, helo_host: str):
         smtp.starttls()
         code, message = smtp.ehlo(name=helo_host)
     except SMTPNotSupportedError as exc:
-        print('XXX', exc)
         # The server does not support the STARTTLS extension
         pass
     except RuntimeError:

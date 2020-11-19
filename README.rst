@@ -41,7 +41,7 @@ Basic usage::
 
 :code:`use_blacklist`: use the blacklist of domains downloaded from https://github.com/martenson/disposable-email-domains
 
-:code:`debug`: emit debug messages while checking email
+:code:`debug`: emit debug/warning messages while checking email
 
 The function :code:`validate_email_or_fail()` works exactly like :code:`validate_email`, except that it raises an exception in the case of validation failure instead of returning :code:`False`.
 
