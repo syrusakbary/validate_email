@@ -1,3 +1,4 @@
+from logging import getLogger
 from smtplib import SMTP, SMTPNotSupportedError, SMTPServerDisconnected
 from socket import error as SocketError
 from socket import gethostname
@@ -14,6 +15,8 @@ from .email_address import EmailAddress
 from .exceptions import (
     AddressNotDeliverableError, DNSConfigurationError, DNSTimeoutError,
     DomainNotFoundError, NoMXError, NoNameserverError, NoValidMXError)
+
+LOGGER = getLogger(name=__name__)
 
 
 class ProtocolError(Exception):
@@ -73,7 +76,7 @@ def _smtp_mail(smtp: SMTP, from_address: EmailAddress):
     'Send and evaluate the `MAIL FROM` command.'
     code, message = smtp.mail(sender=from_address.ace)
     if code >= 300:
-        # RCPT TO bails out, no further SMTP commands are acceptable
+        # MAIL FROM bails out, no further SMTP commands are acceptable
         message = message.decode(errors='ignore')
         raise ProtocolError(f'RCPT TO failed: {message}')
 
@@ -88,6 +91,8 @@ def _smtp_converse(
     Return a `tuple(code, message)` when ambigious, or raise
     `StopIteration` if the conversation points out an existing email.
     """
+    if debug:
+        LOGGER.debug(msg=f'Trying {mx_record} ...')
     smtp = SMTP(timeout=smtp_timeout, host=mx_record)
     smtp.set_debuglevel(debuglevel=2 if debug else False)
     _smtp_ehlo_tls(smtp=smtp, helo_host=helo_host)
@@ -137,7 +142,7 @@ def _check_mx_records(
     for mx_record in mx_records:
         try:
             found_ambigious |= _check_one_mx(
-                error_messages=error_messages, mx_record=mx_record,
+                error_messages=error_messages, mx_record=mx_record.rstrip('.'),
                 helo_host=helo_host, from_address=from_address,
                 email_address=email_address, smtp_timeout=smtp_timeout,
                 debug=debug)
