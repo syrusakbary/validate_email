@@ -1,3 +1,8 @@
+0.2.12:
+- Fixed a TLS error where the MX hostname mismatched the actual hostname due
+  to MX records resolving to hostnames with dots at the end. Yahoo lookups
+  resulted in SSL errors, providing false negatives.
+
 0.2.11:
 - Make emitting logs off per default, observer the passed `debug` parameter
 - Set updater log level to debug
