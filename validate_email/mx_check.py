@@ -78,7 +78,7 @@ def _smtp_mail(smtp: SMTP, from_address: EmailAddress):
     if code >= 300:
         # MAIL FROM bails out, no further SMTP commands are acceptable
         message = message.decode(errors='ignore')
-        raise ProtocolError(f'RCPT TO failed: {message}')
+        raise ProtocolError(f'MAIL FROM failed: {message}')
 
 
 def _smtp_converse(
@@ -89,7 +89,8 @@ def _smtp_converse(
     Do the `SMTP` conversation, handle errors in the caller.
 
     Return a `tuple(code, message)` when ambigious, or raise
-    `StopIteration` if the conversation points out an existing email.
+    `ProtocolError` on error, and `StopIteration` if the conversation
+    points out an existing email.
     """
     if debug:
         LOGGER.debug(msg=f'Trying {mx_record} ...')
@@ -101,10 +102,12 @@ def _smtp_converse(
     smtp.quit()
     if code == 250:
         raise StopIteration
-    elif 400 <= code <= 499:
-        # Ambigious return code, can be graylist, temporary problems,
-        # quota or mailsystem error
-        return code, message.decode(errors='ignore')
+    elif code >= 500:
+        message = message.decode(errors='ignore')
+        raise ProtocolError(f'RCPT TO failed: {message}')
+    # Ambigious return code, can be graylist, temporary problems,
+    # quota or mailsystem error
+    return code, message.decode(errors='ignore')
 
 
 def _check_one_mx(

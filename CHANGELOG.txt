@@ -1,3 +1,7 @@
+0.2.13:
+- Fix 5xx errors not getting through in the exception parameters on the RCPT TO
+  handling. (#45)
+
 0.2.12:
 - Fixed a TLS error where the MX hostname mismatched the actual hostname due
   to MX records resolving to hostnames with dots at the end. Yahoo lookups
