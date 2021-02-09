@@ -20,7 +20,18 @@ LOGGER = getLogger(name=__name__)
 
 
 class ProtocolError(Exception):
-    'Raised when there is an error during the SMTP conversation.'
+    """
+    Raised when there is an error during the SMTP conversation.
+
+    Used only internally.
+    """
+    def __init__(self, command, code, message):
+        self.command = command
+        self.code = code
+        self.message = message.decode(errors='ignore')
+
+    def __str__(self):
+        return f'{self.code} {self.message} (in reply to {self.command})'
 
 
 def _get_mx_records(domain: str, timeout: int) -> list:
@@ -59,8 +70,7 @@ def _smtp_ehlo_tls(smtp: SMTP, helo_host: str):
     code, message = smtp.ehlo(name=helo_host)
     if code >= 300:
         # EHLO bails out, no further SMTP commands are acceptable
-        message = message.decode(errors='ignore')
-        raise ProtocolError(f'EHLO failed: {message}')
+        raise ProtocolError('EHLO', code, message)
     try:
         smtp.starttls()
         code, message = smtp.ehlo(name=helo_host)
@@ -77,8 +87,7 @@ def _smtp_mail(smtp: SMTP, from_address: EmailAddress):
     code, message = smtp.mail(sender=from_address.ace)
     if code >= 300:
         # MAIL FROM bails out, no further SMTP commands are acceptable
-        message = message.decode(errors='ignore')
-        raise ProtocolError(f'MAIL FROM failed: {message}')
+        raise ProtocolError('MAIL FROM', code, message)
 
 
 def _smtp_converse(
@@ -88,26 +97,23 @@ def _smtp_converse(
     """
     Do the `SMTP` conversation, handle errors in the caller.
 
-    Return a `tuple(code, message)` when ambigious, or raise
-    `ProtocolError` on error, and `StopIteration` if the conversation
-    points out an existing email.
+    Raise `ProtocolError` on error, and `StopIteration` if the
+    conversation points out an existing email.
     """
     if debug:
         LOGGER.debug(msg=f'Trying {mx_record} ...')
-    smtp = SMTP(timeout=smtp_timeout, host=mx_record)
-    smtp.set_debuglevel(debuglevel=2 if debug else False)
-    _smtp_ehlo_tls(smtp=smtp, helo_host=helo_host)
-    _smtp_mail(smtp=smtp, from_address=from_address)
-    code, message = smtp.rcpt(recip=email_address.ace)
-    smtp.quit()
-    if code == 250:
-        raise StopIteration
-    elif code >= 500:
-        message = message.decode(errors='ignore')
-        raise ProtocolError(f'RCPT TO failed: {message}')
-    # Ambigious return code, can be graylist, temporary problems,
-    # quota or mailsystem error
-    return code, message.decode(errors='ignore')
+    with SMTP(timeout=smtp_timeout) as smtp:
+        smtp.set_debuglevel(debuglevel=2 if debug else False)
+        code, message = smtp.connect(host=mx_record)
+        if code >= 400:
+            raise ProtocolError('connect', code, message)
+        _smtp_ehlo_tls(smtp=smtp, helo_host=helo_host)
+        _smtp_mail(smtp=smtp, from_address=from_address)
+        code, message = smtp.rcpt(recip=email_address.ace)
+        if code == 250:
+            raise StopIteration
+        elif code >= 500:
+            raise ProtocolError('RCPT TO', code, message)
 
 
 def _check_one_mx(
@@ -128,10 +134,7 @@ def _check_one_mx(
     except (SocketError, ProtocolError) as error:
         error_messages.append(f'{mx_record}: {error}')
         return False
-    if result:
-        error_messages.append(f'{mx_record}: {result[0]} {result[1]}')
-        return True
-    return False
+    return True
 
 
 def _check_mx_records(
