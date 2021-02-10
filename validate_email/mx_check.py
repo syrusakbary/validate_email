@@ -125,7 +125,7 @@ def _check_one_mx(
     `StopIteration` if this MX accepts the email.
     """
     try:
-        result = _smtp_converse(
+        smtp_converse(
             mx_record=mx_record, smtp_timeout=smtp_timeout, debug=debug,
             helo_host=helo_host, from_address=from_address,
             email_address=email_address)
