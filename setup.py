@@ -56,7 +56,7 @@ class BuildPyCommand(build_py):
 
 setup(
     name='py3-validate-email',
-    version='0.2.14',
+    version='0.2.15',
     packages=find_packages(exclude=['tests']),
     install_requires=['dnspython~=2.0', 'idna~=2.10', 'filelock~=3.0'],
     author='László Károlyi',
@@ -68,5 +68,4 @@ setup(
     keywords='email validation verification mx verify',
     url='http://github.com/karolyi/py3-validate-email',
     cmdclass=dict(build_py=BuildPyCommand, develop=DevelopCommand),
-    license='LGPL',
-)
+    license='LGPL')

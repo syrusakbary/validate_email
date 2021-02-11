@@ -1,3 +1,6 @@
+0.2.15:
+- Added a `skip_smtp` option to optionally skip the SMTP protocol check after the DNS level checks, by @SergeyKons
+
 0.2.14:
 - More improvements, courtesy of Reinhard Müller: https://github.com/karolyi/py3-validate-email/pull/48
 

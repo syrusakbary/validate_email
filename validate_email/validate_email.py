@@ -15,8 +15,8 @@ def validate_email_or_fail(
         email_address: str, check_regex: bool = True, check_mx: bool = True,
         from_address: Optional[str] = None, helo_host: Optional[str] = None,
         smtp_timeout: int = 10, dns_timeout: int = 10,
-        use_blacklist: bool = True, debug: bool = False, no_smtp: bool = False,
-        ) -> Optional[bool]:
+        use_blacklist: bool = True, debug: bool = False,
+        skip_smtp: bool = False) -> Optional[bool]:
     """
     Return `True` if the email address validation is successful, `None` if the
     validation result is ambigious, and raise an exception if the validation
@@ -38,11 +38,10 @@ def validate_email_or_fail(
     return mx_check(
         email_address=email_address, from_address=from_address,
         helo_host=helo_host, smtp_timeout=smtp_timeout,
-        dns_timeout=dns_timeout, no_smtp=no_smtp, debug=debug)
+        dns_timeout=dns_timeout, skip_smtp=skip_smtp, debug=debug)
 
 
-def validate_email(
-        email_address: str, *args, **kwargs):
+def validate_email(email_address: str, *args, **kwargs):
     """
     Return `True` or `False` depending if the email address exists
     or/and can be delivered.

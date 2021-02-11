@@ -8,7 +8,7 @@ from dns.exception import Timeout
 from dns.rdatatype import MX as rdtype_mx
 from dns.rdtypes.ANY.MX import MX
 from dns.resolver import (
-    NXDOMAIN, YXDOMAIN, Answer, NoAnswer, NoNameservers, query)
+    NXDOMAIN, YXDOMAIN, Answer, NoAnswer, NoNameservers, resolve)
 
 from .constants import HOST_REGEX
 from .email_address import EmailAddress
@@ -35,13 +35,11 @@ class _ProtocolError(Exception):
 
 
 def _get_mx_records(domain: str, timeout: int) -> list:
-    """
-    Return a list of hostnames in the MX record, raise an exception on
-    any issues.
-    """
+    'Return the DNS response for checking, optionally raise exceptions.'
     try:
-        records = query(
-            qname=domain, rdtype=rdtype_mx, lifetime=timeout)  # type: Answer
+        return resolve(
+            qname=domain, rdtype=rdtype_mx, lifetime=timeout,
+            search=True)  # type: Answer
     except NXDOMAIN:
         raise DomainNotFoundError
     except NoNameservers:
@@ -52,10 +50,22 @@ def _get_mx_records(domain: str, timeout: int) -> list:
         raise DNSConfigurationError
     except NoAnswer:
         raise NoMXError
-    to_check = set()
+
+
+def _get_cleaned_mx_records(domain: str, timeout: int) -> list:
+    """
+    Return a list of hostnames in the MX record, raise an exception on
+    any issues.
+    """
+    records = _get_mx_records(domain=domain, timeout=timeout)
+    to_check = list()
+    host_set = set()
     for record in records:  # type: MX
         dns_str = record.exchange.to_text().rstrip('.')  # type: str
-        to_check.add(dns_str)
+        if dns_str in host_set:
+            continue
+        to_check.append(dns_str)
+        host_set.add(dns_str)
     result = [x for x in to_check if HOST_REGEX.search(string=x)]
     if not result:
         raise NoValidMXError
@@ -91,9 +101,8 @@ def _smtp_mail(smtp: SMTP, from_address: EmailAddress):
 
 
 def _smtp_converse(
-    mx_record: str, smtp_timeout: int, debug: bool, helo_host: str,
-    from_address: EmailAddress, email_address: EmailAddress
-):
+        mx_record: str, smtp_timeout: int, debug: bool, helo_host: str,
+        from_address: EmailAddress, email_address: EmailAddress):
     """
     Do the `SMTP` conversation, handle errors in the caller.
 
@@ -167,7 +176,7 @@ def mx_check(
     email_address: EmailAddress, debug: bool,
     from_address: Optional[EmailAddress] = None,
     helo_host: Optional[str] = None, smtp_timeout: int = 10,
-    dns_timeout: int = 10, no_smtp: bool = False
+    dns_timeout: int = 10, skip_smtp: bool = False
 ) -> Optional[bool]:
     """
     Return `True` if the host responds with a deliverable response code,
@@ -179,9 +188,9 @@ def mx_check(
     if email_address.domain_literal_ip:
         mx_records = [email_address.domain_literal_ip]
     else:
-        mx_records = _get_mx_records(
+        mx_records = _get_cleaned_mx_records(
             domain=email_address.domain, timeout=dns_timeout)
-    if no_smtp:
+    if skip_smtp:
         return True
     return _check_mx_records(
         mx_records=mx_records, smtp_timeout=smtp_timeout, helo_host=host,
