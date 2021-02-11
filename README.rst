@@ -43,6 +43,8 @@ Basic usage::
 
 :code:`debug`: emit debug/warning messages while checking email
 
+:code:`no_smtp`: not send SMTP HELO requests when checking for an email
+
 The function :code:`validate_email_or_fail()` works exactly like :code:`validate_email`, except that it raises an exception in the case of validation failure instead of returning :code:`False`.
 
 The module will try to negotiate a TLS connection with STARTTLS, and silently fall back to an unencrypted SMTP connection if the server doesn't support it.
