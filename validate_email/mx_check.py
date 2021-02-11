@@ -2,7 +2,7 @@ from logging import getLogger
 from smtplib import SMTP, SMTPNotSupportedError, SMTPServerDisconnected
 from socket import error as SocketError
 from socket import gethostname
-from typing import Optional, Tuple
+from typing import Optional
 
 from dns.exception import Timeout
 from dns.rdatatype import MX as rdtype_mx
