@@ -5,8 +5,9 @@ from unittest.mock import Mock, patch
 from dns.exception import Timeout
 
 from validate_email import mx_check as mx_module
+from validate_email.email_address import EmailAddress
 from validate_email.exceptions import DNSTimeoutError, NoValidMXError
-from validate_email.mx_check import _get_mx_records
+from validate_email.mx_check import _get_mx_records, mx_check
 
 
 class DnsNameStub(object):
@@ -62,3 +63,12 @@ class GetMxRecordsTestCase(TestCase):
         with self.assertRaises(DNSTimeoutError) as exc:
             _get_mx_records(domain='testdomain3', timeout=10)
         self.assertTupleEqual(exc.exception.args, ())
+
+    @patch.object(target=mx_module, attribute='_check_mx_records')
+    def test_no_smtp_argument(self, check_mx_records_mock):
+        'Check correct work of no_smtp argument.'
+
+        self.assertTrue(
+            mx_check(EmailAddress('test@mail.ru'), debug=False, no_smtp=True)
+        )
+        self.assertEqual(check_mx_records_mock.call_count, 0)

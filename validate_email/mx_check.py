@@ -167,7 +167,7 @@ def mx_check(
     email_address: EmailAddress, debug: bool,
     from_address: Optional[EmailAddress] = None,
     helo_host: Optional[str] = None, smtp_timeout: int = 10,
-    dns_timeout: int = 10
+    dns_timeout: int = 10, no_smtp: bool = False
 ) -> Optional[bool]:
     """
     Return `True` if the host responds with a deliverable response code,
@@ -181,6 +181,8 @@ def mx_check(
     else:
         mx_records = _get_mx_records(
             domain=email_address.domain, timeout=dns_timeout)
+    if no_smtp:
+        return True
     return _check_mx_records(
         mx_records=mx_records, smtp_timeout=smtp_timeout, helo_host=host,
         from_address=from_address, email_address=email_address, debug=debug)
