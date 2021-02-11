@@ -1,3 +1,6 @@
+0.2.14:
+- More improvements, courtesy of Reinhard Müller: https://github.com/karolyi/py3-validate-email/pull/48
+
 0.2.13:
 - Fix 5xx errors not getting through in the exception parameters on the RCPT TO
   handling. (#45)

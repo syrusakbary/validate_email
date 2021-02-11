@@ -19,13 +19,13 @@ from .exceptions import (
 LOGGER = getLogger(name=__name__)
 
 
-class ProtocolError(Exception):
+class _ProtocolError(Exception):
     """
     Raised when there is an error during the SMTP conversation.
-
     Used only internally.
     """
-    def __init__(self, command, code, message):
+
+    def __init__(self, command: str, code: int, message: bytes):
         self.command = command
         self.code = code
         self.message = message.decode(errors='ignore')
@@ -70,7 +70,7 @@ def _smtp_ehlo_tls(smtp: SMTP, helo_host: str):
     code, message = smtp.ehlo(name=helo_host)
     if code >= 300:
         # EHLO bails out, no further SMTP commands are acceptable
-        raise ProtocolError('EHLO', code, message)
+        raise _ProtocolError('EHLO', code, message)
     try:
         smtp.starttls()
         code, message = smtp.ehlo(name=helo_host)
@@ -87,17 +87,17 @@ def _smtp_mail(smtp: SMTP, from_address: EmailAddress):
     code, message = smtp.mail(sender=from_address.ace)
     if code >= 300:
         # MAIL FROM bails out, no further SMTP commands are acceptable
-        raise ProtocolError('MAIL FROM', code, message)
+        raise _ProtocolError('MAIL FROM', code, message)
 
 
 def _smtp_converse(
     mx_record: str, smtp_timeout: int, debug: bool, helo_host: str,
     from_address: EmailAddress, email_address: EmailAddress
-) -> Optional[Tuple[int, str]]:
+):
     """
     Do the `SMTP` conversation, handle errors in the caller.
 
-    Raise `ProtocolError` on error, and `StopIteration` if the
+    Raise `_ProtocolError` on error, and `StopIteration` if the
     conversation points out an existing email.
     """
     if debug:
@@ -106,14 +106,15 @@ def _smtp_converse(
         smtp.set_debuglevel(debuglevel=2 if debug else False)
         code, message = smtp.connect(host=mx_record)
         if code >= 400:
-            raise ProtocolError('connect', code, message)
+            raise _ProtocolError('connect', code, message)
         _smtp_ehlo_tls(smtp=smtp, helo_host=helo_host)
         _smtp_mail(smtp=smtp, from_address=from_address)
         code, message = smtp.rcpt(recip=email_address.ace)
         if code == 250:
+            # Address valid, early exit
             raise StopIteration
         elif code >= 500:
-            raise ProtocolError('RCPT TO', code, message)
+            raise _ProtocolError('RCPT TO', code, message)
 
 
 def _check_one_mx(
@@ -131,18 +132,19 @@ def _check_one_mx(
             email_address=email_address)
     except SMTPServerDisconnected:
         return True
-    except (SocketError, ProtocolError) as error:
+    except (SocketError, _ProtocolError) as error:
         error_messages.append(f'{mx_record}: {error}')
         return False
     return True
 
 
 def _check_mx_records(
-    mx_records: list, smtp_timeout: int, helo_host: str,
-    from_address: EmailAddress, email_address: EmailAddress,
-    debug: bool,
-) -> Optional[bool]:
+        mx_records: list, smtp_timeout: int, helo_host: str,
+        from_address: EmailAddress, email_address: EmailAddress,
+        debug: bool) -> Optional[bool]:
     'Check the mx records for a given email address.'
+    # TODO: Raise an ambigious exception, containing the messages? Will
+    # be a breaking change.
     error_messages = []
     found_ambigious = False
     for mx_record in mx_records:
@@ -153,11 +155,12 @@ def _check_mx_records(
                 email_address=email_address, smtp_timeout=smtp_timeout,
                 debug=debug)
         except StopIteration:
+            # Address valid, early exit
             return True
     # If any of the mx servers behaved ambigious, return None, otherwise raise
     # an exception containing the collected error messages.
     if not found_ambigious:
-        raise AddressNotDeliverableError(error_messages)
+        raise AddressNotDeliverableError(error_messages=error_messages)
 
 
 def mx_check(
@@ -168,9 +171,8 @@ def mx_check(
 ) -> Optional[bool]:
     """
     Return `True` if the host responds with a deliverable response code,
-    `False` if not-deliverable.
-    Also, return `None` if there if couldn't provide a conclusive result
-    (e.g. temporary errors or graylisting).
+    `False` if not-deliverable. Also, return `None` if there if couldn't
+    provide a conclusive result (e.g. temporary errors or graylisting).
     """
     host = helo_host or gethostname()
     from_address = from_address or email_address
