@@ -13,9 +13,9 @@ LOGGER = getLogger(name=__name__)
 
 def validate_email_or_fail(
         email_address: str, check_regex: bool = True, check_mx: bool = True,
-        no_smtp: bool = False, from_address: Optional[str] = None,
-        helo_host: Optional[str] = None, smtp_timeout: int = 10,
-        dns_timeout: int = 10, use_blacklist: bool = True, debug: bool = False
+        from_address: Optional[str] = None, helo_host: Optional[str] = None,
+        smtp_timeout: int = 10, dns_timeout: int = 10,
+        use_blacklist: bool = True, debug: bool = False, no_smtp: bool = False,
         ) -> Optional[bool]:
     """
     Return `True` if the email address validation is successful, `None` if the
