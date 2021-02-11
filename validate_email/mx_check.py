@@ -52,11 +52,11 @@ def _get_mx_records(domain: str, timeout: int) -> list:
         raise DNSConfigurationError
     except NoAnswer:
         raise NoMXError
-    to_check = dict()
+    to_check = set()
     for record in records:  # type: MX
-        dns_str = record.exchange.to_text()  # type: str
-        to_check[dns_str] = dns_str[:-1] if dns_str.endswith('.') else dns_str
-    result = [k for k, v in to_check.items() if HOST_REGEX.search(string=v)]
+        dns_str = record.exchange.to_text().rstrip('.')  # type: str
+        to_check.add(dns_str)
+    result = [x for x in to_check if HOST_REGEX.search(string=x)]
     if not result:
         raise NoValidMXError
     return result
@@ -150,7 +150,7 @@ def _check_mx_records(
     for mx_record in mx_records:
         try:
             found_ambigious |= _check_one_mx(
-                error_messages=error_messages, mx_record=mx_record.rstrip('.'),
+                error_messages=error_messages, mx_record=mx_record,
                 helo_host=helo_host, from_address=from_address,
                 email_address=email_address, smtp_timeout=smtp_timeout,
                 debug=debug)

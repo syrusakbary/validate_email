@@ -53,7 +53,7 @@ class GetMxRecordsTestCase(TestCase):
             SimpleNamespace(exchange=DnsNameStub(value='valid2.host.')),
         ]
         result = _get_mx_records(domain='testdomain3', timeout=10)
-        self.assertListEqual(result, ['valid.host.', 'valid2.host.'])
+        self.assertListEqual(result, ['valid.host', 'valid2.host'])
 
     @patch.object(target=mx_module, attribute='query', new=TEST_QUERY)
     def test_raises_exception_on_dns_timeout(self):
