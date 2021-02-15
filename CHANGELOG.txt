@@ -1,3 +1,6 @@
+0.2.16:
+- Workaround for a bug in the built-in python 3.8 smtp library: https://github.com/karolyi/py3-validate-email/issues/50
+
 0.2.15:
 - Added a `skip_smtp` option to optionally skip the SMTP protocol check after the DNS level checks, by @SergeyKons
 
