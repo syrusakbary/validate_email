@@ -104,7 +104,7 @@ def _smtp_mail(smtp: SMTP, from_address: EmailAddress):
 def _smtp_converse(
         mx_record: str, smtp_timeout: int, debug: bool, helo_host: str,
         from_address: EmailAddress, email_address: EmailAddress
-    ) -> Tuple[int, str]:
+        ) -> Tuple[int, str]:
     """
     Do the `SMTP` conversation with one MX, and return code and message
     of the reply to the `RCPT TO:` command.
@@ -175,7 +175,7 @@ def mx_check(
         dns_timeout: int = 10, skip_smtp: bool = False,
         raise_communication_errors: bool = False,
         raise_temporary_errors: bool = False
-    ) -> Optional[bool]:
+        ) -> Optional[bool]:
     """
     Verify the given email address by determining the SMTP servers
     responsible for the domain and then asking them to deliver an
