@@ -2,7 +2,7 @@ from logging import getLogger
 from smtplib import SMTP, SMTPNotSupportedError, SMTPServerDisconnected
 from socket import error as SocketError
 from socket import gethostname
-from typing import Optional
+from typing import Optional, Tuple
 
 from dns.exception import Timeout
 from dns.rdatatype import MX as rdtype_mx
@@ -14,7 +14,8 @@ from .constants import HOST_REGEX
 from .email_address import EmailAddress
 from .exceptions import (
     AddressNotDeliverableError, DNSConfigurationError, DNSTimeoutError,
-    DomainNotFoundError, NoMXError, NoNameserverError, NoValidMXError)
+    DomainNotFoundError, NoMXError, NoNameserverError, NoValidMXError,
+    SMTPCommunicationError, SMTPTemporaryError)
 
 LOGGER = getLogger(name=__name__)
 
@@ -78,7 +79,7 @@ def _smtp_ehlo_tls(smtp: SMTP, helo_host: str):
     unavailable.
     """
     code, message = smtp.ehlo(name=helo_host)
-    if code >= 300:
+    if code >= 400:
         # EHLO bails out, no further SMTP commands are acceptable
         raise _ProtocolError('EHLO', code, message)
     try:
@@ -95,19 +96,21 @@ def _smtp_ehlo_tls(smtp: SMTP, helo_host: str):
 def _smtp_mail(smtp: SMTP, from_address: EmailAddress):
     'Send and evaluate the `MAIL FROM` command.'
     code, message = smtp.mail(sender=from_address.ace)
-    if code >= 300:
+    if code >= 400:
         # MAIL FROM bails out, no further SMTP commands are acceptable
         raise _ProtocolError('MAIL FROM', code, message)
 
 
 def _smtp_converse(
         mx_record: str, smtp_timeout: int, debug: bool, helo_host: str,
-        from_address: EmailAddress, email_address: EmailAddress):
+        from_address: EmailAddress, email_address: EmailAddress
+    ) -> Tuple[int, str]:
     """
-    Do the `SMTP` conversation, handle errors in the caller.
+    Do the `SMTP` conversation with one MX, and return code and message
+    of the reply to the `RCPT TO:` command.
 
-    Raise `_ProtocolError` on error, and `StopIteration` if the
-    conversation points out an existing email.
+    If the conversation fails before the `RCPT TO:` command can be
+    issued, a `_ProtocolError` is raised.
     """
     if debug:
         LOGGER.debug(msg=f'Trying {mx_record} ...')
@@ -119,70 +122,87 @@ def _smtp_converse(
             raise _ProtocolError('connect', code, message)
         _smtp_ehlo_tls(smtp=smtp, helo_host=helo_host)
         _smtp_mail(smtp=smtp, from_address=from_address)
-        code, message = smtp.rcpt(recip=email_address.ace)
-        if code == 250:
-            # Address valid, early exit
-            raise StopIteration
-        elif code >= 500:
-            raise _ProtocolError('RCPT TO', code, message)
-
-
-def _check_one_mx(
-        error_messages: list, mx_record: str, helo_host: str,
-        from_address: EmailAddress, email_address: EmailAddress,
-        smtp_timeout: int, debug: bool) -> bool:
-    """
-    Check one MX server, return the `is_ambigious` boolean or raise
-    `StopIteration` if this MX accepts the email.
-    """
-    try:
-        _smtp_converse(
-            mx_record=mx_record, smtp_timeout=smtp_timeout, debug=debug,
-            helo_host=helo_host, from_address=from_address,
-            email_address=email_address)
-    except SMTPServerDisconnected:
-        return True
-    except (SocketError, _ProtocolError) as error:
-        error_messages.append(f'{mx_record}: {error}')
-        return False
-    return True
+        return smtp.rcpt(recip=email_address.ace)
 
 
 def _check_mx_records(
         mx_records: list, smtp_timeout: int, helo_host: str,
         from_address: EmailAddress, email_address: EmailAddress,
-        debug: bool) -> Optional[bool]:
+        debug: bool, raise_communication_errors: bool,
+        raise_temporary_errors: bool) -> Optional[bool]:
     'Check the mx records for a given email address.'
-    # TODO: Raise an ambigious exception, containing the messages? Will
-    # be a breaking change.
-    error_messages = []
-    found_ambigious = False
+    communication_errors = {}
+    temporary_errors = {}
     for mx_record in mx_records:
         try:
-            found_ambigious |= _check_one_mx(
-                error_messages=error_messages, mx_record=mx_record,
+            code, message = _smtp_converse(
+                mx_record=mx_record, smtp_timeout=smtp_timeout, debug=debug,
                 helo_host=helo_host, from_address=from_address,
-                email_address=email_address, smtp_timeout=smtp_timeout,
-                debug=debug)
-        except StopIteration:
-            # Address valid, early exit
-            return True
-    # If any of the mx servers behaved ambigious, return None, otherwise raise
-    # an exception containing the collected error messages.
-    if not found_ambigious:
-        raise AddressNotDeliverableError(error_messages=error_messages)
+                email_address=email_address)
+            if code >= 500:
+                # Address clearly invalid: exit early.
+                raise AddressNotDeliverableError({mx_record: (
+                        'RCPT TO', code, message.decode(errors='ignore'))})
+            elif code >= 400:
+                # Temporary error on this MX: collect message and continue.
+                temporary_errors[mx_record] = (
+                        'RCPT TO', code, message.decode(errors='ignore'))
+            else:
+                # Address clearly valid: exit early.
+                return True
+        except (SocketError, SMTPServerDisconnected) as error:
+            # Connection problem: collect message and continue.
+            communication_errors[mx_record] = ('connect', 0, error)
+        except _ProtocolError as error:
+            # SMTP communication error: collect message and continue.
+            communication_errors[mx_record] = (
+                    error.command, error.code, error.message)
+    # Raise exceptions on ambiguous results if desired. If in doubt, raise the
+    # CommunicationError because that one might point to local configuration or
+    # blacklisting issues.
+    if communication_errors and raise_communication_errors:
+        raise SMTPCommunicationError(communication_errors)
+    if temporary_errors and raise_temporary_errors:
+        raise SMTPTemporaryError(temporary_errors)
+    # Can't verify whether or not email address exists.
+    return None
 
 
 def mx_check(
-    email_address: EmailAddress, debug: bool,
-    from_address: Optional[EmailAddress] = None,
-    helo_host: Optional[str] = None, smtp_timeout: int = 10,
-    dns_timeout: int = 10, skip_smtp: bool = False
-) -> Optional[bool]:
+        email_address: EmailAddress, debug: bool,
+        from_address: Optional[EmailAddress] = None,
+        helo_host: Optional[str] = None, smtp_timeout: int = 10,
+        dns_timeout: int = 10, skip_smtp: bool = False,
+        raise_communication_errors: bool = False,
+        raise_temporary_errors: bool = False
+    ) -> Optional[bool]:
     """
-    Return `True` if the host responds with a deliverable response code,
-    `False` if not-deliverable. Also, return `None` if there if couldn't
-    provide a conclusive result (e.g. temporary errors or graylisting).
+    Verify the given email address by determining the SMTP servers
+    responsible for the domain and then asking them to deliver an
+    email to the address. Before the actual message is sent, the
+    process is interrupted.
+
+    Returns `True` as soon as the any server accepts the recipient
+    address.
+
+    Raises a `AddressNotDeliverableError` if any server unambiguously
+    and permanently refuses to accept the recipient address.
+
+    If the server answers with a temporary error code, the validity of
+    the email address can not be determined. In that case, the function
+    returns `None`, or an `SMTPTemporaryError` is raised, dependent on
+    the value of `raise_temporary_errors`. Greylisting is a frequent
+    cause of this.
+
+    If the SMTP server(s) reply with an error message to any of the
+    communication steps before the recipient address is checked, the
+    validity of the email address can not be determined either. In that
+    case, the function returns `None`, or an `SMTPCommunicationError` is
+    raised, dependent on the value of `raise_communication_errors`.
+
+    In case no responsible SMTP servers can be determined, a variety of
+    exceptions is raised depending on the exact issue, all derived from
+    `MXError`.
     """
     host = helo_host or gethostname()
     from_address = from_address or email_address
@@ -195,4 +215,6 @@ def mx_check(
         return True
     return _check_mx_records(
         mx_records=mx_records, smtp_timeout=smtp_timeout, helo_host=host,
-        from_address=from_address, email_address=email_address, debug=debug)
+        from_address=from_address, email_address=email_address, debug=debug,
+        raise_communication_errors=raise_communication_errors,
+        raise_temporary_errors=raise_temporary_errors)

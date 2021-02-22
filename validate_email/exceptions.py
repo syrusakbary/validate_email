@@ -1,25 +1,37 @@
-from typing import Iterable
+from typing import Dict, Tuple
 
 
-class EmailValidationError(Exception):
-    'Base class for all exceptions indicating validation failure.'
+class Error(Exception):
+    'Base class for all exceptions of this module.'
     message = 'Unknown error.'
 
     def __str__(self):
         return self.message
 
 
-class AddressFormatError(EmailValidationError):
-    'Raised when the email address has an invalid format.'
-    message = 'Invalid email address.'
+class ParameterError(Error):
+    """
+    Base class for all exceptions indicating a wrong function parameter.
+    """
+    pass
 
 
-class FromAddressFormatError(EmailValidationError):
+class FromAddressFormatError(ParameterError):
     """
     Raised when the from email address used for the MX check has an
     invalid format.
     """
     message = 'Invalid "From:" email address.'
+
+
+class EmailValidationError(Error):
+    'Base class for all exceptions indicating validation failure.'
+    pass
+
+
+class AddressFormatError(EmailValidationError):
+    'Raised when the email address has an invalid format.'
+    message = 'Invalid email address.'
 
 
 class DomainBlacklistedError(EmailValidationError):
@@ -30,43 +42,101 @@ class DomainBlacklistedError(EmailValidationError):
     message = 'Domain blacklisted.'
 
 
-class DomainNotFoundError(EmailValidationError):
+class MXError(EmailValidationError):
+    """
+    Base class of all exceptions that indicate failure to determine a
+    valid MX for the domain of email address.
+    """
+    pass
+
+
+class DomainNotFoundError(MXError):
     'Raised when the domain is not found.'
     message = 'Domain not found.'
 
 
-class NoNameserverError(EmailValidationError):
+class NoNameserverError(MXError):
     'Raised when the domain does not resolve by nameservers in time.'
     message = 'No nameserver found for domain.'
 
 
-class DNSTimeoutError(EmailValidationError):
+class DNSTimeoutError(MXError):
     'Raised when the domain lookup times out.'
     message = 'Domain lookup timed out.'
 
 
-class DNSConfigurationError(EmailValidationError):
+class DNSConfigurationError(MXError):
     """
     Raised when the DNS entries for this domain are falsely configured.
     """
     message = 'Misconfigurated DNS entries for domain.'
 
 
-class NoMXError(EmailValidationError):
-    'Raised then the domain has no MX records configured.'
+class NoMXError(MXError):
+    'Raised when the domain has no MX records configured.'
     message = 'No MX record for domain found.'
 
 
-class NoValidMXError(EmailValidationError):
+class NoValidMXError(MXError):
+    """
+    Raised when the domain has MX records configured, but none of them
+    has a valid format.
+    """
     message = 'No valid MX record for domain found.'
 
 
-class AddressNotDeliverableError(EmailValidationError):
-    'Raised when a non-ambigious resulted lookup fails.'
-    message = 'Email address undeliverable:'
+class SMTPError(EmailValidationError):
+    """
+    Base class for exceptions raised from unsuccessful SMTP
+    communication.
 
-    def __init__(self, error_messages: Iterable):
+    `error_messages` is a dictionary with an entry per MX record, where
+    the hostname is the key and a tuple of command, error code, and
+    error message is the value.
+    """
+    def __init__(self, error_messages: Dict[str, Tuple[str, int, str]]):
         self.error_messages = error_messages
 
     def __str__(self) -> str:
-        return '\n'.join([self.message] + self.error_messages)
+        return '\n'.join(
+                [self.message] +
+                [f'{k}: {v[1]} {v[2]} (in reply to {v[0]})'
+                    for k, v in self.error_messages.items()]
+            )
+
+
+class AddressNotDeliverableError(SMTPError):
+    """
+    Raised when at least one of the MX sends an SMTP reply which
+    unambiguously indicate an invalid (nonexistant, blocked, expired...)
+    recipient email address.
+
+    This exception indicates that the email address is clearly invalid.
+    """
+    message = 'Email address undeliverable:'
+
+
+class SMTPCommunicationError(SMTPError):
+    """
+    Raised when the SMTP communication with all MX was unsuccessful for
+    other reasons than an invalid recipient email address.
+
+    This exception indicates a configuration issue either on the host
+    where this program runs or on the MX. A possible reason is that the
+    local host ist blacklisted on the MX.
+    """
+    message = 'SMTP communication failure:'
+
+
+class SMTPTemporaryError(SMTPError):
+    """
+    Raised when the email address cannot be verified because none of the
+    MX gave a clear "yes" or "no" about the existence of the address,
+    but at least one gave a temporary error reply to the "RCPT TO:"
+    command.
+
+    This exception indicates that the validity of the email address
+    cannot be verified, either for reasons of MX configuration (like
+    greylisting) or due to temporary server issues on the MX.
+    """
+    message = 'Temporary error in email address verification:'

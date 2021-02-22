@@ -31,9 +31,9 @@ Basic usage::
 
 :code:`check_mx`: check the mx-records and check whether the email actually exists
 
-:code:`from_address`: the email address the probe will be sent from,
+:code:`from_address`: the email address the probe will be sent from
 
-:code:`helo_host`: the host to use in SMTP HELO when checking for an email,
+:code:`helo_host`: the host to use in SMTP HELO when checking for an email
 
 :code:`smtp_timeout`: seconds until SMTP timeout
 
@@ -44,6 +44,10 @@ Basic usage::
 :code:`debug`: emit debug/warning messages while checking email
 
 :code:`skip_smtp`: (default :code:`False`) skip the SMTP conversation with the server, after MX checks. Will automatically be set to :code:`True` when :code:`check_mx` is :code:`False`!
+
+:code:`raise_communication_errors`: Affects the SMTP verification step. If set to :code:`True`, any connection error or SMTP error message from the server will lead to a negative verification result, otherwise it will be regarded as an ambiguous result. Defaults to :code:`False`. This option is mainly used in connection with :code:`validate_email_or_fail()`, where the exception raised can be analyzed to find out the reason for the otherwise ambiguous result.
+
+:code:`raise_temporary_errors`: Affects the SMTP verification step. If set to :code:`True`, a temporary error reply of the SMTP server to the :code:`RCPT TO` command (as used, for example, with greylisting) will lead to a negative verification result, otherwise it will be regarded as an ambiguous result. Defaults to :code:`False`. This option is mainly used in connection with :code:`validate_email_or_fail()`, where the exception raised can be analyzed to find out the reason for the otherwise ambiguous result.
 
 The function :code:`validate_email_or_fail()` works exactly like :code:`validate_email`, except that it raises an exception in the case of validation failure instead of returning :code:`False`.
 
