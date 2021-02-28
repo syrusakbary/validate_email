@@ -1,4 +1,8 @@
-from typing import Dict, Tuple
+from collections import namedtuple
+from typing import Dict
+
+SMTPMessage = namedtuple(
+    typename='SmtpErrorMessage', field_names=['command', 'code', 'text'])
 
 
 class Error(Exception):
@@ -13,7 +17,6 @@ class ParameterError(Error):
     """
     Base class for all exceptions indicating a wrong function parameter.
     """
-    pass
 
 
 class FromAddressFormatError(ParameterError):
@@ -26,7 +29,6 @@ class FromAddressFormatError(ParameterError):
 
 class EmailValidationError(Error):
     'Base class for all exceptions indicating validation failure.'
-    pass
 
 
 class AddressFormatError(EmailValidationError):
@@ -47,7 +49,6 @@ class MXError(EmailValidationError):
     Base class of all exceptions that indicate failure to determine a
     valid MX for the domain of email address.
     """
-    pass
 
 
 class DomainNotFoundError(MXError):
@@ -90,19 +91,20 @@ class SMTPError(EmailValidationError):
     Base class for exceptions raised from unsuccessful SMTP
     communication.
 
-    `error_messages` is a dictionary with an entry per MX record, where
-    the hostname is the key and a tuple of command, error code, and
-    error message is the value.
+    `error_messages` is a dictionary with a `SMTPMessage` per MX record,
+    where the hostname is the key and a tuple of command, error code,
+    and error message is the value.
     """
-    def __init__(self, error_messages: Dict[str, Tuple[str, int, str]]):
+
+    def __init__(self, error_messages: Dict[str, SMTPMessage]):
         self.error_messages = error_messages
 
     def __str__(self) -> str:
-        return '\n'.join(
-                [self.message] +
-                [f'{k}: {v[1]} {v[2]} (in reply to {v[0]})'
-                    for k, v in self.error_messages.items()]
-            )
+        return '\n'.join([self.message] + [
+            f'{host}: {message.code} {message.text} '
+            f'(in reply to {message.command})'
+            for host, message in self.error_messages.items()
+        ])
 
 
 class AddressNotDeliverableError(SMTPError):
