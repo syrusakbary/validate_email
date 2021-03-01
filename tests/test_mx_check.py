@@ -80,7 +80,7 @@ class GetMxRecordsTestCase(TestCase):
 
 
 class SMTPCheckerTest(TestCase):
-    'Checking the `_SMTPChecker` class functions.'
+    'Checking the `_SMTPChecker` class methods.'
 
     @patch.object(target=SMTP, attribute='connect')
     def test_connect_raises_serverdisconnected(self, mock_connect):
@@ -98,7 +98,7 @@ class SMTPCheckerTest(TestCase):
 
     @patch.object(target=SMTP, attribute='connect')
     def test_connect_with_error(self, mock_connect):
-        'Connect raises `SMTPServerDisconnected`.'
+        'Connect raises `SMTPTemporaryError`.'
         checker = _SMTPChecker(
             local_hostname='localhost', timeout=5, debug=False,
             sender='test@example.com', recip='test@example.com')
