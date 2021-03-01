@@ -1,4 +1,4 @@
-from smtplib import SMTP, SMTPResponseException
+from smtplib import SMTP
 from types import SimpleNamespace
 from unittest.case import TestCase
 from unittest.mock import Mock, patch
