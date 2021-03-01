@@ -86,26 +86,6 @@ class NoValidMXError(MXError):
     message = 'No valid MX record for domain found.'
 
 
-class SMTPNonSuccessError(EmailValidationError):
-    'Raised when a 4xx or 5xx response is received.'
-
-    def __init__(self, command: str, code: int, text: str):
-        self.command = command
-        self.code = code
-        self.text = text
-
-    def __str__(self) -> str:
-        return (
-            f'{self.message}: {self.code} {self.text} '
-            '(in reply to {self.command})')
-
-    @property
-    def smtp_message(self) -> SMTPMessage:
-        'Return an `SMTPMessage` from this exception.'
-        return SMTPMessage(
-            command=self.command, code=self.code, text=self.text)
-
-
 class SMTPError(EmailValidationError):
     """
     Base class for exceptions raised in the end from unsuccessful SMTP
@@ -122,7 +102,7 @@ class SMTPError(EmailValidationError):
     def __str__(self) -> str:
         return '\n'.join([self.message] + [
             f'{host}: {message.code} {message.text} '
-            f'(in reply to {message.command})'
+            f'(in reply to {message.command!r})'
             for host, message in self.error_messages.items()
         ])
 

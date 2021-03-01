@@ -14,8 +14,7 @@ from .email_address import EmailAddress
 from .exceptions import (
     AddressNotDeliverableError, DNSConfigurationError, DNSTimeoutError,
     DomainNotFoundError, NoMXError, NoNameserverError, NoValidMXError,
-    SMTPCommunicationError, SMTPMessage, SMTPNonSuccessError,
-    SMTPTemporaryError)
+    SMTPCommunicationError, SMTPMessage, SMTPTemporaryError)
 
 LOGGER = getLogger(name=__name__)
 
@@ -116,8 +115,7 @@ class _SMTPChecker(SMTP):
         except OSError as error:
             raise SMTPServerDisconnected(str(error))
         if code >= 400:
-            raise SMTPNonSuccessError(
-                command=self.__command, code=code, text=message)
+            raise SMTPResponseException(code=code, msg=message)
         return code, message
 
     def starttls(self, *args, **kwargs):
@@ -142,9 +140,7 @@ class _SMTPChecker(SMTP):
         """
         code, message = super().mail(sender=sender, options=options)
         if code >= 400:
-            raise SMTPNonSuccessError(
-                command=self.__command, code=code,
-                text=message.decode(errors='ignore'))
+            raise SMTPResponseException(code=code, msg=message)
         return code, message
 
     def rcpt(self, recip: str, options: tuple = ()):
@@ -160,9 +156,7 @@ class _SMTPChecker(SMTP):
                     command='RCPT TO', code=code,
                     text=message.decode(errors='ignore'))})
         elif code >= 400:
-            raise SMTPNonSuccessError(
-                command=self.__command, code=code,
-                text=message.decode(errors='ignore'))
+            raise SMTPResponseException(code=code, msg=message)
         return code, message
 
     def quit(self):
@@ -200,15 +194,13 @@ class _SMTPChecker(SMTP):
                 command=self.__command, code=0, text=str(e))
             return False
         except SMTPResponseException as e:
-            self.__communication_errors[self._host] = SMTPMessage(
+            smtp_message = SMTPMessage(
                 command=self.__command, code=e.smtp_code,
                 text=e.smtp_error.decode(errors='ignore'))
-            return False
-        except SMTPNonSuccessError as e:
-            if e.code >= 500:
-                self.__communication_errors[self._host] = e.smtp_message
+            if e.smtp_code >= 500:
+                self.__communication_errors[self._host] = smtp_message
             else:
-                self.__temporary_errors[self._host] = e.smtp_message
+                self.__temporary_errors[self._host] = smtp_message
             return False
         finally:
             self.quit()
