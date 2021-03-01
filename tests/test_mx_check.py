@@ -66,9 +66,10 @@ class GetMxRecordsTestCase(TestCase):
             _get_cleaned_mx_records(domain='testdomain3', timeout=10)
         self.assertTupleEqual(exc.exception.args, ())
 
-    @patch.object(target=mx_module, attribute='_check_mx_records')
+    @patch.object(target=mx_module._SMTPChecker, attribute='check')
     def test_skip_smtp_argument(self, check_mx_records_mock):
         'Check correct work of `skip_smtp` argument.'
         self.assertTrue(mx_check(
             EmailAddress('test@mail.ru'), debug=False, skip_smtp=True))
         self.assertEqual(check_mx_records_mock.call_count, 0)
+

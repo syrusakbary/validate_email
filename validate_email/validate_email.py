@@ -35,16 +35,16 @@ def validate_email_or_fail(
     if the validation result is ambigious, and raise an exception if the
     validation fails.
     """
-    email_address = EmailAddress(email_address)
+    email_address = EmailAddress(address=email_address)
     if from_address is not None:
         try:
-            from_address = EmailAddress(from_address)
+            from_address = EmailAddress(address=from_address)
         except AddressFormatError:
             raise FromAddressFormatError
     if check_regex:
-        regex_check(email_address)
+        regex_check(address=email_address)
     if use_blacklist:
-        domainlist_check(email_address)
+        domainlist_check(address=email_address)
     if not check_mx:
         return True
     return mx_check(
