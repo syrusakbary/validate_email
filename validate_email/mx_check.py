@@ -14,7 +14,8 @@ from .email_address import EmailAddress
 from .exceptions import (
     AddressNotDeliverableError, DNSConfigurationError, DNSTimeoutError,
     DomainNotFoundError, NoMXError, NoNameserverError, NoValidMXError,
-    SMTPCommunicationError, SMTPMessage, SMTPTemporaryError)
+    SMTPCommunicationError, SMTPMessage, SMTPNonSuccessError,
+    SMTPTemporaryError)
 
 LOGGER = getLogger(name=__name__)
 
@@ -106,7 +107,6 @@ class _SMTPChecker(SMTP):
         """
         Like `smtplib.SMTP.connect`, but raise appropriate exceptions on
         connection failure or negative SMTP server response.
-        A code > 400 is an error here.
         """
         self.__command = 'connect'  # Used for error messages.
         self._host = host  # Workaround: Missing in standard smtplib!
@@ -116,7 +116,8 @@ class _SMTPChecker(SMTP):
         except OSError as error:
             raise SMTPServerDisconnected(str(error))
         if code >= 400:
-            raise SMTPResponseException(code=code, msg=message)
+            raise SMTPNonSuccessError(
+                command=self.__command, code=code, text=message)
         return code, message
 
     def starttls(self, *args, **kwargs):
@@ -141,7 +142,9 @@ class _SMTPChecker(SMTP):
         """
         code, message = super().mail(sender=sender, options=options)
         if code >= 400:
-            raise SMTPResponseException(code, message)
+            raise SMTPNonSuccessError(
+                command=self.__command, code=code,
+                text=message.decode(errors='ignore'))
         return code, message
 
     def rcpt(self, recip: str, options: tuple = ()):
@@ -157,9 +160,8 @@ class _SMTPChecker(SMTP):
                     command='RCPT TO', code=code,
                     text=message.decode(errors='ignore'))})
         elif code >= 400:
-            # Temporary error on this host: collect message
-            self.__temporary_errors[self._host] = SMTPMessage(
-                command='RCPT TO', code=code,
+            raise SMTPNonSuccessError(
+                command=self.__command, code=code,
                 text=message.decode(errors='ignore'))
         return code, message
 
@@ -202,11 +204,17 @@ class _SMTPChecker(SMTP):
                 command=self.__command, code=e.smtp_code,
                 text=e.smtp_error.decode(errors='ignore'))
             return False
+        except SMTPNonSuccessError as e:
+            if e.code >= 500:
+                self.__communication_errors[self._host] = e.smtp_message
+            else:
+                self.__temporary_errors[self._host] = e.smtp_message
+            return False
         finally:
             self.quit()
         return code < 400
 
-    def check(self, hosts: List[str]) -> Optional[bool]:
+    def check(self, hosts: List[str]) -> bool:
         """
         Run the check for all given SMTP servers. On positive result,
         return `True`, else raise exceptions described in `mx_check`.
@@ -218,18 +226,17 @@ class _SMTPChecker(SMTP):
                 return True
         # Raise appropriate exceptions when necessary
         if self.__communication_errors:
-            raise SMTPCommunicationError(self.__communication_errors)
+            raise SMTPCommunicationError(
+                error_messages=self.__communication_errors)
         elif self.__temporary_errors:
-            raise SMTPTemporaryError(self.__temporary_errors)
-        # Can't verify whether or not email address exists, return None
+            raise SMTPTemporaryError(error_messages=self.__temporary_errors)
 
 
 def mx_check(
         email_address: EmailAddress, debug: bool,
         from_address: Optional[EmailAddress] = None,
         helo_host: Optional[str] = None, smtp_timeout: int = 10,
-        dns_timeout: int = 10, skip_smtp: bool = False,
-) -> Optional[bool]:
+        dns_timeout: int = 10, skip_smtp: bool = False) -> bool:
     """
     Returns `True` as soon as the any server accepts the recipient
     address.
@@ -239,7 +246,8 @@ def mx_check(
 
     Raise `SMTPTemporaryError` if the server answers with a temporary
     error code when validity of the email address can not be
-    determined. Greylisting is a frequent cause of this.
+    determined. Greylisting or server delivery issues can be a cause for
+    this.
 
     Raise `SMTPCommunicationError` if the SMTP server(s) reply with an
     error message to any of the communication steps before the recipient

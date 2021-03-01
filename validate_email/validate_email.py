@@ -41,7 +41,6 @@ def validate_email_or_fail(
             from_address = EmailAddress(from_address)
         except AddressFormatError:
             raise FromAddressFormatError
-
     if check_regex:
         regex_check(email_address)
     if use_blacklist:
