@@ -63,12 +63,8 @@ def validate_email(email_address: str, *args, **kwargs):
     try:
         return validate_email_or_fail(email_address, *args, **kwargs)
     except SMTPTemporaryError as error:
-        message = f'Validation for {email_address!r} ambigious: {error}'
-        if kwargs.get('debug'):
-            LOGGER.warning(msg=message)
+        LOGGER.info(msg=f'Validation for {email_address!r} ambigious: {error}')
         return
     except EmailValidationError as error:
-        message = f'Validation for {email_address!r} failed: {error}'
-        if kwargs.get('debug'):
-            LOGGER.warning(msg=message)
+        LOGGER.info(msg=f'Validation for {email_address!r} failed: {error}')
         return False

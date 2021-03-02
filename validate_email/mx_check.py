@@ -212,8 +212,7 @@ class _SMTPChecker(SMTP):
         return `True`, else raise exceptions described in `mx_check`.
         """
         for host in hosts:
-            if self.debuglevel > 0:
-                LOGGER.debug(msg=f'Trying {host} ...')
+            LOGGER.debug(msg=f'Trying {host} ...')
             if self._check_one(host=host):
                 return True
         # Raise appropriate exceptions when necessary
