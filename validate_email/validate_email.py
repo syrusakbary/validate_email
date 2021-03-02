@@ -1,13 +1,14 @@
 from logging import getLogger
 from typing import Optional
 
+from .dns_check import dns_check
 from .domainlist_check import domainlist_check
 from .email_address import EmailAddress
 from .exceptions import (
     AddressFormatError, EmailValidationError, FromAddressFormatError,
     SMTPTemporaryError)
-from .mx_check import mx_check
 from .regex_check import regex_check
+from .smtp_check import smtp_check
 
 LOGGER = getLogger(name=__name__)
 
@@ -47,10 +48,14 @@ def validate_email_or_fail(
         domainlist_check(address=email_address)
     if not check_mx:
         return True
-    return mx_check(
-        email_address=email_address, from_address=from_address,
-        helo_host=helo_host, smtp_timeout=smtp_timeout,
-        dns_timeout=dns_timeout, skip_smtp=skip_smtp, debug=debug)
+    mx_records = dns_check(
+            email_address=email_address, dns_timeout=dns_timeout)
+    if skip_smtp:
+        return True
+    return smtp_check(
+        email_address=email_address, mx_records=mx_records,
+        from_address=from_address, helo_host=helo_host,
+        smtp_timeout=smtp_timeout, debug=debug)
 
 
 def validate_email(email_address: str, *args, **kwargs):
