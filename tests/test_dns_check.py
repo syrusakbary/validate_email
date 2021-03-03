@@ -5,8 +5,8 @@ from unittest.mock import Mock, patch
 from dns.exception import Timeout
 
 from validate_email import dns_check
-from validate_email.exceptions import DNSTimeoutError, NoValidMXError
 from validate_email.dns_check import _get_cleaned_mx_records
+from validate_email.exceptions import DNSTimeoutError, NoValidMXError
 
 
 class DnsNameStub(object):
