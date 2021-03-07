@@ -5,7 +5,9 @@
     - A server that bails out with a 4xx code at any part of the SMTP conversation, will be marked as ambiguous, just like the way most implementations treat email delivery.
   - The validate_email_or_fail() function will now raise an SMTPCommunicationError() on a denied email address but will keep trying other MX hosts for validation. If all other servers are ambiguous, the validation will fail nonetheless.
   - Both of the aforementioned exceptions will contain the occurred communication results in their error_messages class variables.
-- Props to @reinhard-mueller for coming up with the new proposal and helping in refining the idea.
+  - Internal API changes (refactorings)
+  - Check results are now logged with info level, instead of emitting warnings when debug is turned on.
+- Props to @reinhard-mueller for coming up with the new proposals and helping in refining the idea.
 
 0.2.16:
 - Workaround for a bug in the built-in python 3.8 smtp library: https://github.com/karolyi/py3-validate-email/issues/50
