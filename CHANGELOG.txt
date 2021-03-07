@@ -1,9 +1,11 @@
 1.0.0:
 - New major release with breaking changes! They are:
-  - Ambiguous results, and the possibility of more of them:
+  - Ambiguous results and the possibility of more of them, to reflect a real world SMTP delivery process:
+    - The module will keep trying probing through all MX hosts for validation and emit errors in the end of the full probing procedure.
+    - Any acceptance of the email delivery will be marked as valid, despite any other ambigious or negative result(s).
+    - The validate_email_or_fail() function will raise an SMTPCommunicationError() on a denied email address only in the end.
     - The validate_email_or_fail() function will now raise an SMTPTemporaryError() on an ambiguous result. That is, greylisting or no servers providing a definitive negative or positive.
-    - A server that bails out with a 4xx code at any part of the SMTP conversation, will be marked as ambiguous, just like the way most implementations treat email delivery.
-  - The validate_email_or_fail() function will now raise an SMTPCommunicationError() on a denied email address but will keep trying other MX hosts for validation. If all other servers are ambiguous, the validation will fail nonetheless.
+    - A server that bails out with a 4xx code at any part of the SMTP conversation, will be marked as ambiguous.
   - Both of the aforementioned exceptions will contain the occurred communication results in their error_messages class variables.
   - Internal API changes (refactorings)
   - Check results are now logged with info level, instead of emitting warnings when debug is turned on.
