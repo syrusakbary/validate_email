@@ -11,12 +11,12 @@ from .exceptions import (
     NoNameserverError, NoValidMXError)
 
 
-def _get_mx_records(domain: str, timeout: int) -> list:
+def _get_mx_records(domain: str, timeout: int) -> Answer:
     'Return the DNS response for checking, optionally raise exceptions.'
     try:
         return resolve(
             qname=domain, rdtype=rdtype_mx, lifetime=timeout,
-            search=True)  # type: Answer
+            search=True)
     except NXDOMAIN:
         raise DomainNotFoundError
     except NoNameservers:
@@ -34,10 +34,10 @@ def _get_cleaned_mx_records(domain: str, timeout: int) -> list:
     Return a list of hostnames in the MX record, raise an exception on
     any issues.
     """
-    records = _get_mx_records(domain=domain, timeout=timeout)
+    answer = _get_mx_records(domain=domain, timeout=timeout)
     to_check = list()
     host_set = set()
-    for record in records:  # type: MX
+    for record in answer.rrset.processing_order():  # type: MX
         dns_str = record.exchange.to_text().rstrip('.')  # type: str
         if dns_str in host_set:
             continue
