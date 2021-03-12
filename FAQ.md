@@ -36,7 +36,7 @@ Run this code with the module installed (use your parameters within),
 and see the output:
 
 ```python
-python -c 'import logging, sys; logging.basicConfig(stream=sys.stderr, level=logging.DEBUG); from validate_email import validate_email; print(validate_email(\'your.email@address.com\', check_mx=True, debug=True))'
+python -c 'import logging, sys; logging.basicConfig(stream=sys.stderr, level=logging.DEBUG); from validate_email import validate_email; print(validate_email(\'your.email@address.com\', smtp_debug=True))'
 ```
 
 If you still don't understand why your code doesn't work as expected by

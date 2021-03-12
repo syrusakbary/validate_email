@@ -49,7 +49,7 @@ def _get_cleaned_mx_records(domain: str, timeout: int) -> list:
     return result
 
 
-def dns_check(email_address: EmailAddress, dns_timeout: int = 10) -> list:
+def dns_check(email_address: EmailAddress, timeout: int = 10) -> list:
     """
     Check whether there are any responsible SMTP servers for the email
     address by looking up the DNS MX records.
@@ -62,4 +62,4 @@ def dns_check(email_address: EmailAddress, dns_timeout: int = 10) -> list:
         return [email_address.domain_literal_ip]
     else:
         return _get_cleaned_mx_records(
-            domain=email_address.domain, timeout=dns_timeout)
+            domain=email_address.domain, timeout=timeout)

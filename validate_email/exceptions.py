@@ -44,41 +44,41 @@ class DomainBlacklistedError(EmailValidationError):
     message = 'Domain blacklisted.'
 
 
-class MXError(EmailValidationError):
+class DNSError(EmailValidationError):
     """
     Base class of all exceptions that indicate failure to determine a
     valid MX for the domain of email address.
     """
 
 
-class DomainNotFoundError(MXError):
+class DomainNotFoundError(DNSError):
     'Raised when the domain is not found.'
     message = 'Domain not found.'
 
 
-class NoNameserverError(MXError):
+class NoNameserverError(DNSError):
     'Raised when the domain does not resolve by nameservers in time.'
     message = 'No nameserver found for domain.'
 
 
-class DNSTimeoutError(MXError):
+class DNSTimeoutError(DNSError):
     'Raised when the domain lookup times out.'
     message = 'Domain lookup timed out.'
 
 
-class DNSConfigurationError(MXError):
+class DNSConfigurationError(DNSError):
     """
     Raised when the DNS entries for this domain are falsely configured.
     """
     message = 'Misconfigurated DNS entries for domain.'
 
 
-class NoMXError(MXError):
+class NoMXError(DNSError):
     'Raised when the domain has no MX records configured.'
     message = 'No MX record for domain found.'
 
 
-class NoValidMXError(MXError):
+class NoValidMXError(DNSError):
     """
     Raised when the domain has MX records configured, but none of them
     has a valid format.

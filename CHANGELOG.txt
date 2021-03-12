@@ -1,12 +1,21 @@
 1.0.0:
 - New major release with breaking changes! They are:
+  - Parameter names for validate_email() and validate_email_or_fail() have changed:
+    - check_regex -> check_format
+    - use_blacklist -> check_blacklist
+    - check_mx -> check_dns
+    - skip_smtp -> check_smtp (with inverted logic)
+    - helo_host -> smtp_helo_host
+    - from_address -> smtp_from_address
+    - debug -> smtp_debug
+    - All parameters except for the first one (the email address to check) are now keyword-only.
   - Ambiguous results and the possibility of more of them, to reflect a real world SMTP delivery process:
-    - The module will keep trying probing through all MX hosts for validation and emit errors in the end of the full probing procedure.
-    - Any acceptance of the email delivery will be marked as valid, despite any other ambigious or negative result(s).
-    - The validate_email_or_fail() function will raise an SMTPCommunicationError() on a denied email address only in the end.
-    - The validate_email_or_fail() function will now raise an SMTPTemporaryError() on an ambiguous result. That is, greylisting or no servers providing a definitive negative or positive.
-    - A server that bails out with a 4xx code at any part of the SMTP conversation, will be marked as ambiguous.
-  - Both of the aforementioned exceptions will contain the occurred communication results in their error_messages class variables.
+    - The module tries all MX hosts in order of priority.
+    - An acceptance of the email address will yield a positive verification result, no further MX hosts will be tried.
+    - Any permanent SMTP error (5xx) will yield a negative verification result, no further MX hosts will be tried.
+    - Any temporary SMTP error (4xx) or any connection issue will cause the next MX host to be tried. Only if all MX hosts yield these kinds of errors, the overall verification result will be ambiguous. That is, greylisting or no servers providing a definitive negative or positive.
+    - The validate_email_or_fail() function will now raise an SMTPTemporaryError() on an ambiguous result.
+  - All exceptions raised by the SMTP check will contain the occurred communication results in their error_messages class variables.
   - Internal API changes (refactorings)
   - Check results are now logged with info level, instead of emitting warnings when debug is turned on.
 - Props to @reinhard-mueller for coming up with the new proposals and helping in refining the idea.

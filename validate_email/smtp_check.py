@@ -175,9 +175,10 @@ class _SMTPChecker(SMTP):
 
 
 def smtp_check(
-        email_address: EmailAddress, mx_records: list, debug: bool,
-        from_address: Optional[EmailAddress] = None,
-        helo_host: Optional[str] = None, smtp_timeout: int = 10) -> bool:
+        email_address: EmailAddress, mx_records: List[str],
+        timeout: float = 10, helo_host: Optional[str] = None,
+        from_address: Optional[EmailAddress] = None, debug: bool = False
+        ) -> bool:
     """
     Returns `True` as soon as the any of the given server accepts the
     recipient address.
@@ -196,6 +197,6 @@ def smtp_check(
     determined either.
     """
     smtp_checker = _SMTPChecker(
-        local_hostname=helo_host, timeout=smtp_timeout, debug=debug,
+        local_hostname=helo_host, timeout=timeout, debug=debug,
         sender=from_address or email_address, recip=email_address)
     return smtp_checker.check(hosts=mx_records)
