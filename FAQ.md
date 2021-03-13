@@ -55,7 +55,7 @@ run.
 ## How can I pass my email account's credentials? How can I use port 465 or 587 when my provider blocks port 25?
 
 The credentials you got from your email provider, as well as the
-instruction to use port 465 or 587, refers to *your provider's* server
+instruction to use port 465 or 587, refer to *your provider's* server
 for *outgoing* emails.
 
 This module, however, directly talks to the *recipient's* server for
