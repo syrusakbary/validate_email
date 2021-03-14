@@ -11,12 +11,12 @@ from .exceptions import (
     NoNameserverError, NoValidMXError)
 
 
-def _get_mx_records(domain: str, timeout: int) -> list:
+def _get_mx_records(domain: str, timeout: int) -> Answer:
     'Return the DNS response for checking, optionally raise exceptions.'
     try:
         return resolve(
             qname=domain, rdtype=rdtype_mx, lifetime=timeout,
-            search=True)  # type: Answer
+            search=True)
     except NXDOMAIN:
         raise DomainNotFoundError
     except NoNameservers:
@@ -34,10 +34,10 @@ def _get_cleaned_mx_records(domain: str, timeout: int) -> list:
     Return a list of hostnames in the MX record, raise an exception on
     any issues.
     """
-    records = _get_mx_records(domain=domain, timeout=timeout)
+    answer = _get_mx_records(domain=domain, timeout=timeout)
     to_check = list()
     host_set = set()
-    for record in records:  # type: MX
+    for record in answer.rrset.processing_order():  # type: MX
         dns_str = record.exchange.to_text().rstrip('.')  # type: str
         if dns_str in host_set:
             continue
@@ -49,7 +49,7 @@ def _get_cleaned_mx_records(domain: str, timeout: int) -> list:
     return result
 
 
-def dns_check(email_address: EmailAddress, dns_timeout: int = 10) -> list:
+def dns_check(email_address: EmailAddress, timeout: int = 10) -> list:
     """
     Check whether there are any responsible SMTP servers for the email
     address by looking up the DNS MX records.
@@ -62,4 +62,4 @@ def dns_check(email_address: EmailAddress, dns_timeout: int = 10) -> list:
         return [email_address.domain_literal_ip]
     else:
         return _get_cleaned_mx_records(
-            domain=email_address.domain, timeout=dns_timeout)
+            domain=email_address.domain, timeout=timeout)

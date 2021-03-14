@@ -2,15 +2,23 @@
 
 ## The module provides false positives:
 
-Some SMTP Servers (Yahoo's servers for example) are only rejecting
+The function of this module, and specifically of the SMTP check, relies
+on the assumption that the mail server declared responsible for an email
+domain will immediately reject any nonexistent address.
+
+Some SMTP servers (Yahoo's servers for example) are only rejecting
 nonexistent emails after the end of `DATA` command has been provided in
 the conversation with the server. This module only goes until the
 `RCPT TO` and says it's valid if it doesn't get rejected there, since
-the `DATA` part of the email is the email body itself. There's not much
-one can do with it, you have to accept false positives in the case of
-yahoo.com and some other providers. I'm not sure if rejecting emails
-after the `DATA` command is a valid behavior based on the SMTP RFC, but
-I wouldn't wonder if not.
+the `DATA` part of the email is the email body itself.
+
+Other SMTP servers accept emails even for nonexistent recipient
+addresses and forward them to a different server which will create a
+bounce message in a second step. This is the case for many email domains
+hosted at Microsoft.
+
+In both cases, there's nothing we can do about it, as the mail server
+we talk to seemingly accepts the email address.
 
 ## Everything gets rejected:
 
@@ -36,7 +44,7 @@ Run this code with the module installed (use your parameters within),
 and see the output:
 
 ```python
-python -c 'import logging, sys; logging.basicConfig(stream=sys.stderr, level=logging.DEBUG); from validate_email import validate_email; print(validate_email(\'your.email@address.com\', check_mx=True, debug=True))'
+python -c 'import logging, sys; logging.basicConfig(stream=sys.stderr, level=logging.DEBUG); from validate_email import validate_email; print(validate_email(\'your.email@address.com\', smtp_debug=True))'
 ```
 
 If you still don't understand why your code doesn't work as expected by
@@ -44,3 +52,20 @@ looking at the the logs, then (and only then) add an issue explaining
 your problem with a REPRODUCIBLE example, and the output of your test
 run.
 
+## How can I pass my email account's credentials? How can I use port 465 or 587 when my provider blocks port 25?
+
+The credentials you got from your email provider, as well as the
+instruction to use port 465 or 587, refer to *your provider's* server
+for *outgoing* emails.
+
+This module, however, directly talks to the *recipient's* server for
+*incoming* emails, so neither your credentials nor the switch to port
+465 or 587 is of any use here.
+
+If your internet connection is within an IP pool (often the case for
+private use) or it doesn't have a proper reverse DNS entry, the servers
+for many email domains (depending on their configuration) will reject
+connections from you. This can *not* be solved by using your provider's
+mail server. Instead, you have to use the library on a machine with an
+internet connection with static IP address and a proper reverse DNS
+entry.

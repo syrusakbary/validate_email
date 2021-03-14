@@ -56,11 +56,11 @@ class DomainListValidator(object):
         self.domain_blacklist = set(
             x.strip().lower() for x in lines if x.strip())
 
-    def __call__(self, address: EmailAddress) -> bool:
+    def __call__(self, email_address: EmailAddress) -> bool:
         'Do the checking here.'
-        if address.domain in self.domain_whitelist:
+        if email_address.domain in self.domain_whitelist:
             return True
-        if address.domain in self.domain_blacklist:
+        if email_address.domain in self.domain_blacklist:
             raise DomainBlacklistedError
         return True
 

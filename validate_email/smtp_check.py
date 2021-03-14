@@ -38,7 +38,6 @@ class _SMTPChecker(SMTP):
         self.set_debuglevel(debuglevel=2 if debug else False)
         self.__sender = sender
         self.__recip = recip
-        self.__communication_errors = {}
         self.__temporary_errors = {}
         # Avoid error on close() after unsuccessful connect
         self.sock = None
@@ -144,15 +143,16 @@ class _SMTPChecker(SMTP):
             self.mail(sender=self.__sender.ace)
             code, message = self.rcpt(recip=self.__recip.ace)
         except SMTPServerDisconnected as e:
-            self.__communication_errors[self._host] = SMTPMessage(
-                command=self.__command, code=0, text=str(e))
+            self.__temporary_errors[self._host] = SMTPMessage(
+                command=self.__command, code=451, text=str(e))
             return False
         except SMTPResponseException as e:
             smtp_message = SMTPMessage(
                 command=self.__command, code=e.smtp_code,
                 text=e.smtp_error.decode(errors='ignore'))
             if e.smtp_code >= 500:
-                self.__communication_errors[self._host] = smtp_message
+                raise SMTPCommunicationError(
+                    error_messages={self._host: smtp_message})
             else:
                 self.__temporary_errors[self._host] = smtp_message
             return False
@@ -169,18 +169,16 @@ class _SMTPChecker(SMTP):
             LOGGER.debug(msg=f'Trying {host} ...')
             if self._check_one(host=host):
                 return True
-        # Raise appropriate exceptions when necessary
-        if self.__communication_errors:
-            raise SMTPCommunicationError(
-                error_messages=self.__communication_errors)
-        elif self.__temporary_errors:
+        # Raise exception for collected temporary errors
+        if self.__temporary_errors:
             raise SMTPTemporaryError(error_messages=self.__temporary_errors)
 
 
 def smtp_check(
-        email_address: EmailAddress, mx_records: list, debug: bool,
-        from_address: Optional[EmailAddress] = None,
-        helo_host: Optional[str] = None, smtp_timeout: int = 10) -> bool:
+    email_address: EmailAddress, mx_records: List[str], timeout: float = 10,
+    helo_host: Optional[str] = None,
+    from_address: Optional[EmailAddress] = None, debug: bool = False
+) -> bool:
     """
     Returns `True` as soon as the any of the given server accepts the
     recipient address.
@@ -188,16 +186,17 @@ def smtp_check(
     Raise an `AddressNotDeliverableError` if any server unambiguously
     and permanently refuses to accept the recipient address.
 
-    Raise `SMTPTemporaryError` if the server answers with a temporary
-    error code when validity of the email address can not be determined.
-    Greylisting or server delivery issues can be a cause for this.
+    Raise `SMTPTemporaryError` if all the servers answer with a
+    temporary error code during the SMTP communication. This means that
+    the validity of the email address can not be determined. Greylisting
+    or server delivery issues can be a cause for this.
 
-    Raise `SMTPCommunicationError` if the SMTP server(s) reply with an
+    Raise `SMTPCommunicationError` if any SMTP server replies with an
     error message to any of the communication steps before the recipient
     address is checked, and the validity of the email address can not be
     determined either.
     """
     smtp_checker = _SMTPChecker(
-        local_hostname=helo_host, timeout=smtp_timeout, debug=debug,
+        local_hostname=helo_host, timeout=timeout, debug=debug,
         sender=from_address or email_address, recip=email_address)
     return smtp_checker.check(hosts=mx_records)
