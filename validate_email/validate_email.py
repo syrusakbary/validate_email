@@ -27,12 +27,12 @@ simply accept everything and send a bounce notification later. Hence, a
 
 
 def validate_email_or_fail(
-        email_address: str, *, check_format: bool = True,
-        check_blacklist: bool = True, check_dns: bool = True,
-        dns_timeout: float = 10, check_smtp: bool = True,
-        smtp_timeout: float = 10, smtp_helo_host: Optional[str] = None,
-        smtp_from_address: Optional[str] = None, smtp_debug: bool = False
-        ) -> Optional[bool]:
+    email_address: str, *, check_format: bool = True,
+    check_blacklist: bool = True, check_dns: bool = True,
+    dns_timeout: float = 10, check_smtp: bool = True,
+    smtp_timeout: float = 10, smtp_helo_host: Optional[str] = None,
+    smtp_from_address: Optional[str] = None, smtp_debug: bool = False
+) -> Optional[bool]:
     """
     Return `True` if the email address validation is successful, `None`
     if the validation result is ambigious, and raise an exception if the
@@ -43,7 +43,7 @@ def validate_email_or_fail(
         regex_check(email_address=email_address)
     if check_blacklist:
         domainlist_check(email_address=email_address)
-    if not (check_dns or check_smtp):  # check_smtp implies check_dns.
+    if not check_dns and not check_smtp:  # check_smtp implies check_dns.
         return True
     mx_records = dns_check(email_address=email_address, timeout=dns_timeout)
     if not check_smtp:

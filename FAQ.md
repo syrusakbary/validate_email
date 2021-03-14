@@ -62,9 +62,10 @@ This module, however, directly talks to the *recipient's* server for
 *incoming* emails, so neither your credentials nor the switch to port
 465 or 587 is of any use here.
 
-If your internet connection is within a dynamic range (often the case
-for private use) or it doesn't have a proper reverse DNS entry, the
-servers for many email domains will reject connections from you. This
-can *not* be solved by using your provider's mail server. Instead, you
-have to use the library on a machine with an internet connection with
-static IP address and a proper reverse DNS entry.
+If your internet connection is within an IP pool (often the case for
+private use) or it doesn't have a proper reverse DNS entry, the servers
+for many email domains (depending on their configuration) will reject
+connections from you. This can *not* be solved by using your provider's
+mail server. Instead, you have to use the library on a machine with an
+internet connection with static IP address and a proper reverse DNS
+entry.
