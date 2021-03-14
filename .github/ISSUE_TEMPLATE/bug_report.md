@@ -24,4 +24,24 @@ A clear and concise description of what you expected to happen.
 - Your network environment (ISP provided home connecton, or testing from an actual whitelisted server)
 
 **Additional context**
+=======
+
+A clear and concise description of what the bug is.
+
+**My debug output**
+
+Output from the debug run described in the FAQ:
+
+**Expected behavior**
+
+A clear and concise description of what you expected to happen.
+
+**Please complete the following information:**
+ - OS: [e.g. Linux, FreeBSD, Windows]
+ - Flavor and Version [e.g. Debian 22, FreeBSD 12.2]
+ - Your network environment (ISP provided home connecton, or testing from an actual whitelisted server)
+ - Your exact `py3-validate-email` module version
+
+**Additional context**
+
 Add any other context about the problem here.
