@@ -35,7 +35,7 @@ def validate_email_or_fail(
 ) -> Optional[bool]:
     """
     Return `True` if the email address validation is successful, `None`
-    if the validation result is ambigious, and raise an exception if the
+    if the validation result is ambiguous, and raise an exception if the
     validation fails.
     """
     email_address = EmailAddress(address=email_address)
@@ -64,12 +64,12 @@ def validate_email(email_address: str, **kwargs):
     Return `True` or `False` depending if the email address exists
     or/and can be delivered.
 
-    Return `None` if the result is ambigious.
+    Return `None` if the result is ambiguous.
     """
     try:
         return validate_email_or_fail(email_address, **kwargs)
     except SMTPTemporaryError as error:
-        LOGGER.info(msg=f'Validation for {email_address!r} ambigious: {error}')
+        LOGGER.info(msg=f'Validation for {email_address!r} is ambiguous: {error}')
         return
     except EmailValidationError as error:
         LOGGER.info(msg=f'Validation for {email_address!r} failed: {error}')
