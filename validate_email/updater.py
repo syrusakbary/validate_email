@@ -21,7 +21,7 @@ TMP_PATH = Path(gettempdir()).joinpath(
     f'{gettempprefix()}-py3-validate-email-{geteuid()}')
 TMP_PATH.mkdir(exist_ok=True)
 BLACKLIST_URL = (
-    'https://raw.githubusercontent.com/martenson/disposable-email-domains/'
+    'https://github.com/disposable-email-domains/disposable-email-domains/'
     'master/disposable_email_blocklist.conf')
 LIB_PATH_DEFAULT = Path(__file__).resolve().parent.joinpath('data')
 BLACKLIST_FILEPATH_INSTALLED = LIB_PATH_DEFAULT.joinpath('blacklist.txt')

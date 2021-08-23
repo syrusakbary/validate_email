@@ -39,7 +39,7 @@ class AddressFormatError(EmailValidationError):
 class DomainBlacklistedError(EmailValidationError):
     """
     Raised when the domain of the email address is blacklisted on
-    https://github.com/martenson/disposable-email-domains.
+    https://github.com/disposable-email-domains/disposable-email-domains.
     """
     message = 'Domain blacklisted.'
 

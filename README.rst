@@ -34,7 +34,7 @@ Parameters
 
 :code:`check_format`: check whether the email address has a valid structure; defaults to :code:`True`
 
-:code:`check_blacklist`: check the email against the blacklist of domains downloaded from https://github.com/martenson/disposable-email-domains; defaults to :code:`True`
+:code:`check_blacklist`: check the email against the blacklist of domains downloaded from https://github.com/disposable-email-domains/disposable-email-domains; defaults to :code:`True`
 
 :code:`check_dns`: check the DNS mx-records, defaults to :code:`True`
                    
@@ -90,7 +90,7 @@ Check whether the given email address conforms to the general format requirement
 
 Check whether the domain part of the given email address (the part behind the "@") is known as a disposable and temporary email address domain. These are often used to register dummy users in order to spam or abuse some services.
 
-A list of such domains is maintained at https://github.com/martenson/disposable-email-domains, and this module uses that list.
+A list of such domains is maintained at https://github.com/disposable-email-domains/disposable-email-domains, and this module uses that list.
 
 :code:`validate_email_or_fail()` raises :code:`DomainBlacklistedError` if the email address belongs to a blacklisted domain.
 
