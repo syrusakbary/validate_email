@@ -6,6 +6,7 @@ labels: ''
 assignees: ''
 
 ---
+<!-- Please don't delete this template or we'll close your issue -->
 
 - [ ] I have read and understood the [FAQ](https://github.com/karolyi/py3-validate-email/blob/master/FAQ.md)
 
