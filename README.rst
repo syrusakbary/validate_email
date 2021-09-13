@@ -25,7 +25,17 @@ USAGE
 Basic usage::
 
     from validate_email import validate_email
-    is_valid = validate_email(email_address='example@example.com', check_format=True, check_blacklist=True, check_dns=True, dns_timeout=10, check_smtp=True, smtp_timeout=10, smtp_helo_host='my.host.name', smtp_from_address='my@from.addr.ess', smtp_debug=False)
+    is_valid = validate_email(
+        email_address='example@example.com',
+        check_format=True,
+        check_blacklist=True,
+        check_dns=True,
+        dns_timeout=10,
+        check_smtp=True,
+        smtp_timeout=10,
+        smtp_helo_host='my.host.name',
+        smtp_from_address='my@from.addr.ess',
+        smtp_debug=False)
 
 Parameters
 ----------------------------
@@ -160,8 +170,11 @@ The update can be triggered manually::
 
     from validate_email.updater import update_builtin_blacklist
 
-    update_builtin_blacklist(force: bool = False, background: bool = True,
-        callback: Callable = None) -> Optional[Thread]
+    update_builtin_blacklist(
+        force: bool = False,
+        background: bool = True,
+        callback: Callable = None
+    ) -> Optional[Thread]
 
 :code:`force`: forces the update even if the downloaded/installed file is fresh enough.
 
