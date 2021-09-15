@@ -1,9 +1,9 @@
 from pathlib import Path
-from subprocess import check_output, STDOUT
+from shutil import rmtree
+from subprocess import STDOUT, check_output
 from tarfile import TarInfo
 from tarfile import open as tar_open
 from unittest.case import TestCase
-from shutil import rmtree
 
 try:
     # OSX Homebrew fix: https://stackoverflow.com/a/53190037/1067833

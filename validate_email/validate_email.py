@@ -1,6 +1,6 @@
 from logging import getLogger
-from typing import Optional
 from ssl import SSLContext
+from typing import Optional
 
 from .dns_check import dns_check
 from .domainlist_check import domainlist_check
