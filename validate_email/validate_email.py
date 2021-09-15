@@ -1,5 +1,6 @@
 from logging import getLogger
 from typing import Optional
+from ssl import SSLContext
 
 from .dns_check import dns_check
 from .domainlist_check import domainlist_check
@@ -31,7 +32,9 @@ def validate_email_or_fail(
     check_blacklist: bool = True, check_dns: bool = True,
     dns_timeout: float = 10, check_smtp: bool = True,
     smtp_timeout: float = 10, smtp_helo_host: Optional[str] = None,
-    smtp_from_address: Optional[str] = None, smtp_debug: bool = False
+    smtp_from_address: Optional[str] = None,
+    smtp_skip_tls: bool = False, smtp_tls_context: Optional[SSLContext] = None,
+    smtp_debug: bool = False
 ) -> Optional[bool]:
     """
     Return `True` if the email address validation is successful, `None`
@@ -56,7 +59,8 @@ def validate_email_or_fail(
     return smtp_check(
         email_address=email_address, mx_records=mx_records,
         timeout=smtp_timeout, helo_host=smtp_helo_host,
-        from_address=smtp_from_address, debug=smtp_debug)
+        from_address=smtp_from_address, skip_tls=smtp_skip_tls,
+        tls_context=smtp_tls_context, debug=smtp_debug)
 
 
 def validate_email(email_address: str, **kwargs):
@@ -69,7 +73,8 @@ def validate_email(email_address: str, **kwargs):
     try:
         return validate_email_or_fail(email_address, **kwargs)
     except SMTPTemporaryError as error:
-        LOGGER.info(msg=f'Validation for {email_address!r} is ambiguous: {error}')
+        LOGGER.info(
+            msg=f'Validation for {email_address!r} is ambiguous: {error}')
         return
     except EmailValidationError as error:
         LOGGER.info(msg=f'Validation for {email_address!r} failed: {error}')

@@ -21,8 +21,8 @@ TMP_PATH = Path(gettempdir()).joinpath(
     f'{gettempprefix()}-py3-validate-email-{geteuid()}')
 TMP_PATH.mkdir(exist_ok=True)
 BLACKLIST_URL = (
-    'https://github.com/disposable-email-domains/disposable-email-domains/'
-    'master/disposable_email_blocklist.conf')
+    'https://raw.githubusercontent.com/disposable-email-domains/'
+    'disposable-email-domains/master/disposable_email_blocklist.conf')
 LIB_PATH_DEFAULT = Path(__file__).resolve().parent.joinpath('data')
 BLACKLIST_FILEPATH_INSTALLED = LIB_PATH_DEFAULT.joinpath('blacklist.txt')
 BLACKLIST_FILEPATH_TMP = TMP_PATH.joinpath('blacklist.txt')
@@ -92,8 +92,8 @@ class BlacklistUpdater(object):
         """
         LIB_PATH_DEFAULT.mkdir(exist_ok=True)
         self._download(
-                headers={}, blacklist_path=BLACKLIST_FILEPATH_INSTALLED,
-                etag_path=ETAG_FILEPATH_INSTALLED)
+            headers={}, blacklist_path=BLACKLIST_FILEPATH_INSTALLED,
+            etag_path=ETAG_FILEPATH_INSTALLED)
 
     def _process(self, force: bool = False):
         'Start optionally updating the blacklist.txt file, while locked.'

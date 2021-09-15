@@ -1,3 +1,12 @@
+1.0.2:
+- Handle an SSLError during STARTTLS correctly (See https://github.com/karolyi/py3-validate-email/issues/79)
+- Extend options with an `smtp_skip_tls` option. When `True`, the module won't initiate a TLS session. Defaults to `False`.
+- Extend options with a `smtp_tls_context` option. When passed and `smtp_skip_tls` is `False` (or not passed), the client will use the passed `SSLContext`.
+- Typo fix: 'ambigious' -> 'ambiguous'
+
+1.0.1:
+- Fix dnspython dependency
+
 1.0.0:
 - New major release with breaking changes! They are:
   - Parameter names for validate_email() and validate_email_or_fail() have changed:

@@ -35,6 +35,8 @@ Basic usage::
         smtp_timeout=10,
         smtp_helo_host='my.host.name',
         smtp_from_address='my@from.addr.ess',
+        smtp_skip_tls=False,
+        smtp_tls_context=None,
         smtp_debug=False)
 
 Parameters
@@ -58,6 +60,10 @@ Parameters
 
 :code:`smtp_from_address`: the email address used for the sender in the SMTP conversation; if set to :code:`None` (the default), the :code:`email_address` parameter is used as the sender as well
 
+:code:`smtp_skip_tls`: skip the TLS negotiation with the server, even when available. defaults to :code:`False`
+
+:code:`smtp_tls_context`: an :code:`SSLContext` to use with the TLS negotiation when the server supports it. defaults to :code:`None`
+
 :code:`smtp_debug`: activate :code:`smtplib`'s debug output which always goes to stderr; defaults to :code:`False`
 
 Result
@@ -72,7 +78,7 @@ The function :code:`validate_email()` returns the following results:
   At least one of the requested checks failed for the given email address.
 
 :code:`None`
-  None of the requested checks failed, but at least one of them yielded an ambiguous result. Currently, the SMTP check is the only check which can actually yield an ambigous result.
+  None of the requested checks failed, but at least one of them yielded an ambiguous result. Currently, the SMTP check is the only check which can actually yield an ambiguous result.
 
 Getting more information
 ----------------------------
@@ -81,7 +87,7 @@ The function :code:`validate_email_or_fail()` works exactly like :code:`validate
 
 All these exceptions descend from :code:`EmailValidationError`. Please see below for the exact exceptions raised by the various checks. Note that all exception classes are defined in the module :code:`validate_email.exceptions`.
 
-Please note that :code:`SMTPTemporaryError` indicates an ambigous check result rather than a check failure, so if you use :code:`validate_email_or_fail()`, you probably want to catch this exception.
+Please note that :code:`SMTPTemporaryError` indicates an ambiguous check result rather than a check failure, so if you use :code:`validate_email_or_fail()`, you probably want to catch this exception.
 
 The checks
 ============================
@@ -138,7 +144,7 @@ Check whether the given email address exists by simulating an actual email deliv
 
 A connection to the SMTP server identified through the domain's MX record is established, and an SMTP conversation is initiated up to the point where the server confirms the existence of the email address. After that, instead of actually sending an email, the conversation is cancelled.
 
-The module will try to negotiate a TLS connection with STARTTLS, and silently fall back to an unencrypted SMTP connection if the server doesn't support it.
+Unless you set :code:`smtp_skip_tls` to :code:`True`, the module will try to negotiate a TLS connection with STARTTLS, and silently fall back to an unencrypted SMTP connection if the server doesn't support it. Additionally, depending on your client configuration, the TLS negotiation might fail which will result in an ambiguous response for the given host as the module will be unable to communicate with the host after the negotiation fails. In trying to succeed, you can pass an :code:`SSLContext` as an :code:`smtp_tls_context` parameter, but remember that the server might still deny the negotiation based on how you set the :code:`SSLContext` up, and based on its security settings as well.
 
 If the SMTP server replies to the :code:`RCPT TO` command with a code 250 (success) response, the check is considered successful.
 
@@ -146,7 +152,7 @@ If the SMTP server replies with a code 5xx (permanent error) response at any poi
 
 If the SMTP server cannot be connected, unexpectedly closes the connection, or replies with a code 4xx (temporary error) at any stage of the conversation, the check is considered ambiguous.
 
-If there is more than one valid MX record for the domain, they are tried in order of priority until the first time the check is either successful or failed. Only in case of an ambiguous check result, the next server is tried, and only if the check result is ambiguous for all servers, the overall check is considered ambigous as well.
+If there is more than one valid MX record for the domain, they are tried in order of priority until the first time the check is either successful or failed. Only in case of an ambiguous check result, the next server is tried, and only if the check result is ambiguous for all servers, the overall check is considered ambiguous as well.
 
 On failure of this check or on ambiguous result, :code:`validate_email_or_fail()` raises one of the following exceptions, all of which descend from :code:`SMTPError`:
 
@@ -157,9 +163,9 @@ On failure of this check or on ambiguous result, :code:`validate_email_or_fail()
   The SMTP server refused to even let us get to the point where we could ask it about the email address. Technically, this means that the server sent a code 5xx response either immediately after connection, or as a reply to the :code:`EHLO` (or :code:`HELO`) or :code:`MAIL FROM` commands.
 
 :code:`SMTPTemporaryError`
-  A temporary error occured during the check for all available MX servers. This is considered an ambigous check result. For example, greylisting is a frequent cause for this.
+  A temporary error occured during the check for all available MX servers. This is considered an ambiguous check result. For example, greylisting is a frequent cause for this. Make sure you check the contents of the message.
 
-All of the above three exceptions provide further detail about the error response(s) in the exception's instance variable :code:`error_messages`.
+All of the above three exceptions provide further details about the error response(s) in the exception's instance variable :code:`error_messages`.
 
 Auto-updater
 ============================

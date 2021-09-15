@@ -1,8 +1,9 @@
 from pathlib import Path
-from subprocess import check_output
+from subprocess import check_output, STDOUT
 from tarfile import TarInfo
 from tarfile import open as tar_open
 from unittest.case import TestCase
+from shutil import rmtree
 
 try:
     # OSX Homebrew fix: https://stackoverflow.com/a/53190037/1067833
@@ -31,8 +32,12 @@ class InstallTest(TestCase):
 
     def test_sdist_excludes_datadir(self):
         'The created sdist should not contain the data dir.'
+        check_output(
+            args=[executable, 'setup.py', '-q', 'sdist'], stderr=STDOUT)
         latest_sdist = list(Path('dist').glob(pattern='*.tar.gz'))[-1]
         tar_file = tar_open(name=latest_sdist, mode='r:gz')
         for tarinfo in tar_file:  # type: TarInfo
             self.assertNotIn(
                 member='/validate_email/data/', container=tarinfo.name)
+        # Clean up after the test
+        rmtree('dist')

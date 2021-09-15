@@ -1,12 +1,13 @@
 from logging import getLogger
 from smtplib import (
     SMTP, SMTPNotSupportedError, SMTPResponseException, SMTPServerDisconnected)
+from ssl import SSLContext, SSLError
 from typing import List, Optional, Tuple
 
 from .email_address import EmailAddress
 from .exceptions import (
     AddressNotDeliverableError, SMTPCommunicationError, SMTPMessage,
-    SMTPTemporaryError)
+    SMTPTemporaryError, TLSNegotiationError)
 
 LOGGER = getLogger(name=__name__)
 
@@ -28,7 +29,8 @@ class _SMTPChecker(SMTP):
 
     def __init__(
             self, local_hostname: str, timeout: float, debug: bool,
-            sender: EmailAddress, recip: EmailAddress):
+            sender: EmailAddress, recip: EmailAddress,
+            skip_tls: bool = False, tls_context: SSLContext = None):
         """
         Initialize the object with all the parameters which remain
         constant during the check of one email address on all the SMTP
@@ -39,6 +41,8 @@ class _SMTPChecker(SMTP):
         self.__sender = sender
         self.__recip = recip
         self.__temporary_errors = {}
+        self.__skip_tls = skip_tls
+        self.__tls_context = tls_context
         # Avoid error on close() after unsuccessful connect
         self.sock = None
 
@@ -84,6 +88,8 @@ class _SMTPChecker(SMTP):
         except RuntimeError:
             # SSL/TLS support is not available to your Python interpreter
             pass
+        except SSLError as exc:
+            raise TLSNegotiationError(exc)
 
     def mail(self, sender: str, options: tuple = ()):
         """
@@ -107,7 +113,7 @@ class _SMTPChecker(SMTP):
             raise AddressNotDeliverableError({
                 self._host: SMTPMessage(
                     command='RCPT TO', code=code,
-                    text=message.decode(errors='ignore'))})
+                    text=message.decode(errors='ignore'), exceptions=())})
         elif code >= 400:
             raise SMTPResponseException(code=code, msg=message)
         return code, message
@@ -125,6 +131,19 @@ class _SMTPChecker(SMTP):
             self.does_esmtp = False
             self.close()
 
+    def _handle_smtpresponseexception(
+            self, exc: SMTPResponseException) -> bool:
+        'Handle an `SMTPResponseException`.'
+        smtp_message = SMTPMessage(
+            command=self.__command, code=exc.smtp_code,
+            text=exc.smtp_error.decode(errors='ignore'), exceptions=(exc,))
+        if exc.smtp_code >= 500:
+            raise SMTPCommunicationError(
+                error_messages={self._host: smtp_message})
+        else:
+            self.__temporary_errors[self._host] = smtp_message
+        return False
+
     def _check_one(self, host: str) -> bool:
         """
         Run the check for one SMTP server.
@@ -138,23 +157,22 @@ class _SMTPChecker(SMTP):
         """
         try:
             self.connect(host=host)
-            self.starttls()
+            if not self.__skip_tls:
+                self.starttls(context=self.__tls_context)
             self.ehlo_or_helo_if_needed()
             self.mail(sender=self.__sender.ace)
             code, message = self.rcpt(recip=self.__recip.ace)
-        except SMTPServerDisconnected as e:
+        except SMTPServerDisconnected as exc:
             self.__temporary_errors[self._host] = SMTPMessage(
-                command=self.__command, code=451, text=str(e))
+                command=self.__command, code=451, text=str(exc),
+                exceptions=(exc,))
             return False
-        except SMTPResponseException as e:
-            smtp_message = SMTPMessage(
-                command=self.__command, code=e.smtp_code,
-                text=e.smtp_error.decode(errors='ignore'))
-            if e.smtp_code >= 500:
-                raise SMTPCommunicationError(
-                    error_messages={self._host: smtp_message})
-            else:
-                self.__temporary_errors[self._host] = smtp_message
+        except SMTPResponseException as exc:
+            return self._handle_smtpresponseexception(exc=exc)
+        except TLSNegotiationError as exc:
+            self.__temporary_errors[self._host] = SMTPMessage(
+                command=self.__command, code=-1, text=str(exc),
+                exceptions=exc.args)
             return False
         finally:
             self.quit()
@@ -177,7 +195,9 @@ class _SMTPChecker(SMTP):
 def smtp_check(
     email_address: EmailAddress, mx_records: List[str], timeout: float = 10,
     helo_host: Optional[str] = None,
-    from_address: Optional[EmailAddress] = None, debug: bool = False
+    from_address: Optional[EmailAddress] = None,
+    skip_tls: bool = False, tls_context: Optional[SSLContext] = None,
+    debug: bool = False
 ) -> bool:
     """
     Returns `True` as soon as the any of the given server accepts the
@@ -198,5 +218,6 @@ def smtp_check(
     """
     smtp_checker = _SMTPChecker(
         local_hostname=helo_host, timeout=timeout, debug=debug,
-        sender=from_address or email_address, recip=email_address)
+        sender=from_address or email_address, recip=email_address,
+        skip_tls=skip_tls, tls_context=tls_context)
     return smtp_checker.check(hosts=mx_records)

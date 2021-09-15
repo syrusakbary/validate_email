@@ -2,7 +2,8 @@ from collections import namedtuple
 from typing import Dict
 
 SMTPMessage = namedtuple(
-    typename='SmtpErrorMessage', field_names=['command', 'code', 'text'])
+    typename='SmtpMessage',
+    field_names=['command', 'code', 'text', 'exceptions'])
 
 
 class Error(Exception):
@@ -142,3 +143,12 @@ class SMTPTemporaryError(SMTPError):
     greylisting) or due to temporary server issues on the MX.
     """
     message = 'Temporary error in email address verification:'
+
+
+class TLSNegotiationError(EmailValidationError):
+    'Raised when an error happens during the TLS negotiation.'
+    _str = 'During TLS negotiation, the following exception(s) happened: {exc}'
+
+    def __str__(self):
+        'Print a readable depiction of what happened.'
+        return self._str.format(exc=', '.join(repr(x) for x in self.args))
