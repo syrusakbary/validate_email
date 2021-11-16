@@ -1,6 +1,6 @@
 include AUTHORS
 include LICENSE
-include README.rst
+include README.md
 include CHANGELOG.txt
 recursive-exclude tests *
 recursive-exclude * __pycache__

@@ -1,3 +1,7 @@
+1.0.3:
+- Moving project off github
+- Static type check fixes
+
 1.0.2:
 - Handle an SSLError during STARTTLS correctly (See https://gitea.ksol.io/karolyi/py3-validate-email/issues/79)
 - Extend options with an `smtp_skip_tls` option. When `True`, the module won't initiate a TLS session. Defaults to `False`.
