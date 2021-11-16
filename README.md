@@ -1,6 +1,5 @@
-![image](https://app.travis-ci.com/karolyi/py3-validate-email.svg?branch=master%0A%20:target:%20https://app.travis-ci.com/karolyi/py3-validate-email)
-
-![image](https://bmc-cdn.nyc3.digitaloceanspaces.com/BMC-button-images/custom_images/orange_img.png%0A%20:target:%20https://buymeacoff.ee/karolyi)
+[![](https://app.travis-ci.com/karolyi/py3-validate-email.svg?branch=master "Travis status")](https://app.travis-ci.com/karolyi/py3-validate-email)
+[![](https://bmc-cdn.nyc3.digitaloceanspaces.com/BMC-button-images/custom_images/orange_img.png "Buy me a coffee!")](https://buymeacoff.ee/karolyi)
 
 py3-validate-email
 ==================
