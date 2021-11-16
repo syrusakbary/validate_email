@@ -15,7 +15,8 @@ def run_initial_updater(path: Path):
     orig_dont_write_bytecode = sys.dont_write_bytecode
     sys.dont_write_bytecode = True
     try:
-        from updater import BLACKLIST_FILEPATH_INSTALLED, BlacklistUpdater
+        from updater import (  # type: ignore
+            BLACKLIST_FILEPATH_INSTALLED, BlacklistUpdater)
         log.info(f'downloading blacklist to {BLACKLIST_FILEPATH_INSTALLED}')
         BlacklistUpdater()._install()
     finally:
@@ -34,8 +35,8 @@ class DevelopCommand(develop):
 
     def run(self):
         super().run()
-        if not self.dry_run:
-            run_initial_updater(Path(__file__).parent)
+        if not self.dry_run:  # type: ignore
+            run_initial_updater(path=Path(__file__).parent)
 
 
 class BuildPyCommand(build_py):
@@ -63,9 +64,10 @@ setup(
     author_email='laszlo@karolyi.hu',
     description=(
         'Email validator with regex, blacklisted domains and SMTP checking.'),
-    long_description=Path(__file__).parent.joinpath('README.rst').read_text(),
-    long_description_content_type='text/x-rst',
+    long_description=Path(__file__).parent.joinpath('README.md').read_text(),
+    long_description_content_type='text/markdown',
     keywords='email validation verification mx verify',
-    url='http://github.com/karolyi/py3-validate-email',
-    cmdclass=dict(build_py=BuildPyCommand, develop=DevelopCommand),
+    url='http://gitea.ksol.io/karolyi/py3-validate-email',
+    cmdclass=dict(
+        build_py=BuildPyCommand, develop=DevelopCommand),  # type: ignore
     license='LGPL')

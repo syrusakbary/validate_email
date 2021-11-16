@@ -75,7 +75,7 @@ class BlacklistUpdater(object):
         'Downlad and store blacklist file.'
         LOGGER.debug(msg=f'Checking {BLACKLIST_URL}')
         request = Request(url=BLACKLIST_URL, headers=headers)
-        response = urlopen(url=request)  # type: HTTPResponse
+        response: HTTPResponse = urlopen(url=request)
         # New data available
         LOGGER.debug(msg=f'Writing response into {blacklist_path}')
         blacklist_path.write_bytes(response.fp.read())

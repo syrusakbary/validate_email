@@ -5,3 +5,6 @@ dist
 MANIFEST
 *.egg-info
 venv
+.eggs
+pyrightconfig.json
+__pycache__

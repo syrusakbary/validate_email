@@ -11,7 +11,7 @@ from .exceptions import (
     NoNameserverError, NoValidMXError)
 
 
-def _get_mx_records(domain: str, timeout: int) -> Answer:
+def _get_mx_records(domain: str, timeout: float) -> Answer:
     'Return the DNS response for checking, optionally raise exceptions.'
     try:
         return resolve(
@@ -29,7 +29,7 @@ def _get_mx_records(domain: str, timeout: int) -> Answer:
         raise NoMXError
 
 
-def _get_cleaned_mx_records(domain: str, timeout: int) -> list:
+def _get_cleaned_mx_records(domain: str, timeout: float) -> list:
     """
     Return a list of hostnames in the MX record, raise an exception on
     any issues.
@@ -49,7 +49,7 @@ def _get_cleaned_mx_records(domain: str, timeout: int) -> list:
     return result
 
 
-def dns_check(email_address: EmailAddress, timeout: int = 10) -> list:
+def dns_check(email_address: EmailAddress, timeout: float = 10) -> list:
     """
     Check whether there are any responsible SMTP servers for the email
     address by looking up the DNS MX records.

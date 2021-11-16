@@ -8,7 +8,7 @@ assignees: ''
 ---
 <!-- Please don't delete this template or we'll close your issue -->
 
-- [ ] I have read and understood the [FAQ](https://github.com/karolyi/py3-validate-email/blob/master/FAQ.md)
+- [ ] I have read and understood the [FAQ](https://gitea.ksol.io/karolyi/py3-validate-email/src/branch/master/FAQ.md)
 
 **Describe the bug**
 

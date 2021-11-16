@@ -41,25 +41,25 @@ def validate_email_or_fail(
     if the validation result is ambiguous, and raise an exception if the
     validation fails.
     """
-    email_address = EmailAddress(address=email_address)
+    email_address_to = EmailAddress(address=email_address)
     if check_format:
-        regex_check(email_address=email_address)
+        regex_check(email_address=email_address_to)
     if check_blacklist:
-        domainlist_check(email_address=email_address)
+        domainlist_check(email_address=email_address_to)
     if not check_dns and not check_smtp:  # check_smtp implies check_dns.
         return True
-    mx_records = dns_check(email_address=email_address, timeout=dns_timeout)
+    mx_records = dns_check(email_address=email_address_to, timeout=dns_timeout)
     if not check_smtp:
         return True
-    if smtp_from_address is not None:
-        try:
-            smtp_from_address = EmailAddress(address=smtp_from_address)
-        except AddressFormatError:
-            raise FromAddressFormatError
+    try:
+        email_address_from = None if not smtp_from_address else \
+            EmailAddress(address=smtp_from_address)
+    except AddressFormatError:
+        raise FromAddressFormatError
     return smtp_check(
-        email_address=email_address, mx_records=mx_records,
+        email_address=email_address_to, mx_records=mx_records,
         timeout=smtp_timeout, helo_host=smtp_helo_host,
-        from_address=smtp_from_address, skip_tls=smtp_skip_tls,
+        from_address=email_address_from, skip_tls=smtp_skip_tls,
         tls_context=smtp_tls_context, debug=smtp_debug)
 
 

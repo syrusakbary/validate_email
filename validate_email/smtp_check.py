@@ -28,7 +28,7 @@ class _SMTPChecker(SMTP):
     """
 
     def __init__(
-            self, local_hostname: str, timeout: float, debug: bool,
+            self, local_hostname: Optional[str], timeout: float, debug: bool,
             sender: EmailAddress, recip: EmailAddress,
             skip_tls: bool = False, tls_context: SSLContext = None):
         """
@@ -66,14 +66,17 @@ class _SMTPChecker(SMTP):
         """
         self.__command = 'connect'  # Used for error messages.
         self._host = host  # Workaround: Missing in standard smtplib!
+        # Use an OS assigned source port if source_address is passed
+        _source_address = None if source_address is None \
+            else (source_address, 0)
         try:
             code, message = super().connect(
-                host=host, port=port, source_address=source_address)
+                host=host, port=port, source_address=_source_address)
         except OSError as error:
             raise SMTPServerDisconnected(str(error))
         if code >= 400:
             raise SMTPResponseException(code=code, msg=message)
-        return code, message
+        return code, message.decode()
 
     def starttls(self, *args, **kwargs):
         """
@@ -134,9 +137,11 @@ class _SMTPChecker(SMTP):
     def _handle_smtpresponseexception(
             self, exc: SMTPResponseException) -> bool:
         'Handle an `SMTPResponseException`.'
+        smtp_error = exc.smtp_error.decode(errors='ignore') \
+            if type(exc.smtp_error) is bytes else exc.smtp_error
         smtp_message = SMTPMessage(
             command=self.__command, code=exc.smtp_code,
-            text=exc.smtp_error.decode(errors='ignore'), exceptions=(exc,))
+            text=smtp_error, exceptions=(exc,))
         if exc.smtp_code >= 500:
             raise SMTPCommunicationError(
                 error_messages={self._host: smtp_message})
@@ -161,7 +166,7 @@ class _SMTPChecker(SMTP):
                 self.starttls(context=self.__tls_context)
             self.ehlo_or_helo_if_needed()
             self.mail(sender=self.__sender.ace)
-            code, message = self.rcpt(recip=self.__recip.ace)
+            code, _ = self.rcpt(recip=self.__recip.ace)
         except SMTPServerDisconnected as exc:
             self.__temporary_errors[self._host] = SMTPMessage(
                 command=self.__command, code=451, text=str(exc),
@@ -190,6 +195,7 @@ class _SMTPChecker(SMTP):
         # Raise exception for collected temporary errors
         if self.__temporary_errors:
             raise SMTPTemporaryError(error_messages=self.__temporary_errors)
+        return False
 
 
 def smtp_check(
