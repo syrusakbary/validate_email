@@ -16,11 +16,11 @@ class InstallTest(TestCase):
     'Testing package installation.'
 
     def test_datadir_is_in_place(self):
-        'Data directory should be in the virtualenv.'
+        'Data directory should be in the virtualenv *after installation*.'
         output = check_output([
             executable, '-c', (
-                'import sys;sys.path.remove("");import validate_email;'
-                'print(validate_email.updater.BLACKLIST_FILEPATH_INSTALLED);'
+                'import sys;sys.path.remove("");import validate_email;' +
+                'print(validate_email.updater.BLACKLIST_FILEPATH_INSTALLED);' +
                 'print(validate_email.updater.ETAG_FILEPATH_INSTALLED, end="")'
             )]).decode('ascii')
         bl_path, etag_path = output.split('\n')

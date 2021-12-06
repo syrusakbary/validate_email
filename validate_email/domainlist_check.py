@@ -1,4 +1,5 @@
 from logging import getLogger
+from pathlib import Path
 from typing import Optional
 
 from filelock import FileLock
@@ -6,8 +7,8 @@ from filelock import FileLock
 from .email_address import EmailAddress
 from .exceptions import DomainBlacklistedError
 from .updater import (
-    BLACKLIST_FILEPATH_INSTALLED, BLACKLIST_FILEPATH_TMP, LOCK_PATH,
-    update_builtin_blacklist)
+    BLACKLIST_FILEPATH_INSTALLED, BLACKLIST_FILEPATH_TMP, ENV_IGNORE_UPDATER,
+    LOCK_PATH, TMP_PATH, update_builtin_blacklist)
 
 SetOrNone = Optional[set]
 LOGGER = getLogger(__name__)
@@ -17,7 +18,6 @@ class DomainListValidator(object):
     'Check the provided email against domain lists.'
     domain_whitelist = set()
     domain_blacklist = set('localhost')
-    _is_builtin_bl_used: bool = False
 
     def __init__(
             self, whitelist: SetOrNone = None, blacklist: SetOrNone = None):
@@ -26,11 +26,10 @@ class DomainListValidator(object):
         if blacklist:
             self.domain_blacklist = set(x.lower() for x in blacklist)
         else:
-            self._is_builtin_bl_used = True
             self.reload_builtin_blacklist()
 
     @property
-    def _blacklist_path(self) -> str:
+    def _blacklist_path(self) -> Path:
         'Return the path of the `blacklist.txt` that should be loaded.'
         try:
             # Zero size: file is touched to indicate the preinstalled
@@ -43,9 +42,8 @@ class DomainListValidator(object):
 
     def reload_builtin_blacklist(self):
         '(Re)load our built-in blacklist.'
-        if not self._is_builtin_bl_used:
-            return
-        with FileLock(lock_file=LOCK_PATH):
+        TMP_PATH.mkdir(exist_ok=True)
+        with FileLock(lock_file=str(LOCK_PATH)):
             bl_path = self._blacklist_path
             LOGGER.debug(msg=f'(Re)loading blacklist from {bl_path}')
             try:
@@ -57,7 +55,10 @@ class DomainListValidator(object):
             x.strip().lower() for x in lines if x.strip())
 
     def __call__(self, email_address: EmailAddress) -> bool:
-        'Do the checking here.'
+        """
+        Check if the email domain is valid, raise
+        `DomainBlacklistedError` if not.
+        """
         if email_address.domain in self.domain_whitelist:
             return True
         if email_address.domain in self.domain_blacklist:

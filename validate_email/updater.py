@@ -1,5 +1,6 @@
 from http.client import HTTPResponse
 from logging import getLogger
+from os import environ
 from pathlib import Path
 from tempfile import gettempdir, gettempprefix
 from threading import Thread
@@ -19,9 +20,9 @@ except ImportError:
 LOGGER = getLogger(__name__)
 TMP_PATH = Path(gettempdir()).joinpath(
     f'{gettempprefix()}-py3-validate-email-{geteuid()}')
-TMP_PATH.mkdir(exist_ok=True)
+ENV_IGNORE_UPDATER = environ.get('PY3VE_IGNORE_UPDATER')
 BLACKLIST_URL = (
-    'https://raw.githubusercontent.com/disposable-email-domains/'
+    'https://raw.githubusercontent.com/disposable-email-domains/' +
     'disposable-email-domains/master/disposable_email_blocklist.conf')
 LIB_PATH_DEFAULT = Path(__file__).resolve().parent.joinpath('data')
 BLACKLIST_FILEPATH_INSTALLED = LIB_PATH_DEFAULT.joinpath('blacklist.txt')
@@ -117,9 +118,11 @@ class BlacklistUpdater(object):
             self, force: bool = False, callback: Optional[Callable] = None):
         'Start optionally updating the blacklist.txt file.'
         # Locking to avoid multi-process update on multi-process startup
-        # Import filelock locally because this module is als used by setup.py
+        # Import filelock locally because this module is als used by
+        # setup.py
         from filelock import FileLock
-        with FileLock(lock_file=LOCK_PATH):
+        TMP_PATH.mkdir(exist_ok=True)
+        with FileLock(lock_file=str(LOCK_PATH)):
             self._process(force=force)
         # Always execute callback because multiple processes can have
         # different versions of blacklists (one before, one after
@@ -135,12 +138,15 @@ def update_builtin_blacklist(
     Update and reload the built-in blacklist. Return the `Thread` used
     to do the background update, so it can be `join()`-ed.
     """
+    if ENV_IGNORE_UPDATER:
+        LOGGER.debug(msg='Skipping update of built-in blacklist.')
+        return
     LOGGER.debug(msg='Starting optional update of built-in blacklist.')
     blacklist_updater = BlacklistUpdater()
     kwargs = dict(force=force, callback=callback)
     if not background:
         blacklist_updater.process(**kwargs)
         return
-    bl_thread = Thread(target=blacklist_updater.process, kwargs=kwargs)
-    bl_thread.start()
-    return bl_thread
+    updater_thread = Thread(target=blacklist_updater.process, kwargs=kwargs)
+    updater_thread.start()
+    return updater_thread

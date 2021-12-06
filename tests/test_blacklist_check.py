@@ -11,11 +11,13 @@ from validate_email.validate_email import (
 class BlacklistCheckTestCase(TestCase):
     'Testing if the included blacklist filtering works.'
 
-    def setUpClass():
+    def setUpClass():  # type: ignore
         update_builtin_blacklist(force=False, background=False)
 
     def test_blacklist_positive(self):
         'Disallows blacklist item: mailinator.com.'
+        # The setting of the PY3VE_IGNORE_UPDATER variable doesn't
+        # matter here as the module has already download an initial list
         with self.assertRaises(DomainBlacklistedError):
             domainlist_check(EmailAddress('pm2@mailinator.com'))
         with self.assertRaises(DomainBlacklistedError):

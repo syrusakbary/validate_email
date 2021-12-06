@@ -172,5 +172,7 @@ The update can be triggered manually:
 
 `callback`: An optional Callable (function/method) to be called when the update is done.
 
+You can completely skip the auto-update on startup by setting the environment variable `PY3VE_IGNORE_UPDATER` to any value.
+
 # Read the [FAQ](https://gitea.ksol.io/karolyi/py3-validate-email/src/branch/master/FAQ.md)!
 

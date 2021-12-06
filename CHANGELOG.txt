@@ -1,3 +1,6 @@
+1.0.4:
+- Skipping the startup update with setting an environment variable called `PY3VE_IGNORE_UPDATER`
+
 1.0.3:
 - Moving project off github
 - Static type check fixes
