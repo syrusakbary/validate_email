@@ -40,17 +40,26 @@ class DomainListValidator(object):
         except FileNotFoundError:
             return BLACKLIST_FILEPATH_INSTALLED
 
+    def _get_blacklist_lines(self) -> list:
+        'Return the lines of blacklist.txt as a list.'
+        bl_path = self._blacklist_path
+        LOGGER.debug(msg=f'(Re)loading blacklist from {bl_path}')
+        try:
+            with open(bl_path) as fd:
+                return fd.readlines()
+        except FileNotFoundError:
+            return []
+
     def reload_builtin_blacklist(self):
         '(Re)load our built-in blacklist.'
-        TMP_PATH.mkdir(exist_ok=True)
-        with FileLock(lock_file=str(LOCK_PATH)):
-            bl_path = self._blacklist_path
-            LOGGER.debug(msg=f'(Re)loading blacklist from {bl_path}')
-            try:
-                with open(bl_path) as fd:
-                    lines = fd.readlines()
-            except FileNotFoundError:
-                return
+        # Locking is only necessary when we might have an updater
+        # process running
+        if ENV_IGNORE_UPDATER:
+            lines = self._get_blacklist_lines()
+        else:
+            TMP_PATH.mkdir(exist_ok=True)
+            with FileLock(lock_file=str(LOCK_PATH)):
+                lines = self._get_blacklist_lines()
         self.domain_blacklist = set(
             x.strip().lower() for x in lines if x.strip())
 
