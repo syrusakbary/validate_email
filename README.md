@@ -58,6 +58,8 @@ Basic usage:
 
 `smtp_debug`: activate smtplib's debug output which always goes to stderr; defaults to `False`
 
+`address_types`: The IP address types to use. pass a `frozenset` if you want to change the default `frozenset([IPv6Address, IPv4Address])`. Useful when you only deliver emails through one interface, but you have dual stack. For an explanation, see [this issue](https://gitea.ksol.io/karolyi/py3-validate-email/issues/94)
+
 ### Result
 
 The function `validate_email()` returns the following results:
