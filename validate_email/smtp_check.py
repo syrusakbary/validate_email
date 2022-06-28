@@ -30,7 +30,7 @@ class _SMTPChecker(SMTP):
     def __init__(
             self, local_hostname: Optional[str], timeout: float, debug: bool,
             sender: EmailAddress, recip: EmailAddress,
-            skip_tls: bool = False, tls_context: SSLContext = None):
+            skip_tls: bool = False, tls_context: Optional[SSLContext] = None):
         """
         Initialize the object with all the parameters which remain
         constant during the check of one email address on all the SMTP
@@ -59,7 +59,7 @@ class _SMTPChecker(SMTP):
 
     def connect(
             self, host: str = 'localhost', port: int = 0,
-            source_address: str = None) -> Tuple[int, str]:
+            source_address: Optional[str] = None) -> Tuple[int, str]:
         """
         Like `smtplib.SMTP.connect`, but raise appropriate exceptions on
         connection failure or negative SMTP server response.

@@ -2,7 +2,7 @@ from logging import getLogger
 from ssl import SSLContext
 from typing import Optional
 
-from .dns_check import dns_check
+from .dns_check import dns_check, DefaultAddressTypes, AddressTypes
 from .domainlist_check import domainlist_check
 from .email_address import EmailAddress
 from .exceptions import (
@@ -34,7 +34,7 @@ def validate_email_or_fail(
     smtp_timeout: float = 10, smtp_helo_host: Optional[str] = None,
     smtp_from_address: Optional[str] = None,
     smtp_skip_tls: bool = False, smtp_tls_context: Optional[SSLContext] = None,
-    smtp_debug: bool = False
+    smtp_debug: bool = False, address_types: AddressTypes = DefaultAddressTypes
 ) -> Optional[bool]:
     """
     Return `True` if the email address validation is successful, `None`
@@ -48,7 +48,9 @@ def validate_email_or_fail(
         domainlist_check(email_address=email_address_to)
     if not check_dns and not check_smtp:  # check_smtp implies check_dns.
         return True
-    mx_records = dns_check(email_address=email_address_to, timeout=dns_timeout)
+    mx_records = dns_check(
+        email_address=email_address_to, timeout=dns_timeout,
+        address_types=address_types)
     if not check_smtp:
         return True
     try:
