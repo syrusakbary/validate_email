@@ -1,3 +1,6 @@
+1.0.7:
+- Handle STARTTLS timeouts: https://gitea.ksol.io/karolyi/py3-validate-email/issues/95
+
 1.0.6:
 - Add the option to exclusively use certain address schemas (IPv4/IPV6)
 

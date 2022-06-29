@@ -1,6 +1,7 @@
 from logging import getLogger
 from smtplib import (
     SMTP, SMTPNotSupportedError, SMTPResponseException, SMTPServerDisconnected)
+from socket import timeout
 from ssl import SSLContext, SSLError
 from typing import List, Optional, Tuple
 
@@ -91,7 +92,7 @@ class _SMTPChecker(SMTP):
         except RuntimeError:
             # SSL/TLS support is not available to your Python interpreter
             pass
-        except SSLError as exc:
+        except (SSLError, timeout) as exc:
             raise TLSNegotiationError(exc)
 
     def mail(self, sender: str, options: tuple = ()):
