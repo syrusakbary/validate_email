@@ -1,0 +1,27 @@
+name: lint_python
+on: [pull_request, push]
+jobs:
+  lint_python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.x
+      - run: pip install --upgrade pip wheel
+      - run: pip install bandit black codespell flake8 flake8-2020 flake8-bugbear
+                         flake8-comprehensions isort mypy pytest pyupgrade safety
+      - run: bandit --recursive --skip B101 .  # B101 is assert statements
+      - run: black --check . || true
+      - run: codespell || true  # --ignore-words-list="" --skip="*.css,*.js,*.lock"
+      - run: flake8 . --ignore=E124,E126,E251,E261,E305,F401 --max-complexity=23
+                      --max-line-length=99 --show-source --statistics
+      - run: isort --check-only --profile black . || true
+      - run: pip install -r requirements.txt || pip install --editable . || pip install . || true
+      # - run: pip install pyDNS  # Add check_mx capabilities for pytest
+      - run: pip install py3dns  # Add check_mx capabilities for pytest
+      - run: mkdir --parents --verbose .mypy_cache
+      - run: mypy --ignore-missing-imports --install-types --non-interactive . || true
+      - run: pytest --doctest-modules .
+      - run: shopt -s globstar && pyupgrade --py37-plus **/*.py || true
+      - run: safety check

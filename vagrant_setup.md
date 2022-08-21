@@ -19,14 +19,14 @@ How to Set Up Validate Email Using Vagrant on PC
     * http://www.saltycrane.com/blog/2010/02/how-install-pip-ubuntu/
     * tl;dr
         ```
-        $ sudo apt-get install python-pip
+        $ sudo apt-get install python3-pip
    
         ```
-4. Install pyDNS
+4. Install py3dns
     ```
     This is a package dependency of validate email
 
-    $ sudo pip install pydns
+    $ sudo python3 -m pip install py3dns
     ```
 5. Install git
    ```
@@ -45,7 +45,7 @@ How to Set Up Validate Email Using Vagrant on PC
     ```
     $ cd validate_email
 
-    $ python validate_email.py
+    $ python3 validate_email.py
     ```
 
 

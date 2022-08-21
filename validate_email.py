@@ -129,7 +129,7 @@ def validate_email(email, check_mx=False, verify=False, debug=False, smtp_timeou
         if check_mx:
             if not DNS:
                 raise Exception('For check the mx records or check if the email exists you must '
-                                'have installed pyDNS python package')
+                                'have installed py3dns Python package')
             hostname = email[email.find('@') + 1:]
             mx_hosts = get_mx_ip(hostname)
             if mx_hosts is None:

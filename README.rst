@@ -16,9 +16,9 @@ First, you must do::
 Extra
 ------
 
-For check the domain mx and verify email exits you must have the `pyDNS` package installed::
+For check the domain mx and verify email exits you must have the `py3dns` package installed::
 
-    pip install pyDNS
+    pip install py3dns
 
 
 USAGE
