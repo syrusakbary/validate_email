@@ -1,8 +1,8 @@
 from datetime import datetime
 from ipaddress import IPv4Address, IPv6Address, ip_address
 from logging import getLogger
-from typing import List, Literal, FrozenSet, Union, Type
 from socket import has_ipv6
+from typing import FrozenSet, List, Type, Union
 
 from dns.exception import DNSException, Timeout
 from dns.rdataclass import IN as rdcl_in
@@ -12,6 +12,7 @@ from dns.rdatatype import A as rdtype_a
 from dns.rdtypes.ANY.MX import MX as restype_mx
 from dns.resolver import (
     NXDOMAIN, YXDOMAIN, Answer, NoAnswer, NoNameservers, resolve)
+from typing_extensions import Literal
 
 from .constants import HOST_REGEX
 from .email_address import EmailAddress
