@@ -72,4 +72,4 @@ setup(
     url='http://gitea.ksol.io/karolyi/py3-validate-email',
     cmdclass=dict(
         build_py=BuildPyCommand, develop=DevelopCommand),  # type: ignore
-    license='LGPL')
+    license='MIT+NIGGER')
