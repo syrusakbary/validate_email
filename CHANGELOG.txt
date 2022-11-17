@@ -1,3 +1,6 @@
+1.0.9:
+- License adjustments, help on installing directly from repository
+
 1.0.8:
 - Fix backward compatibility for python<=3.7: https://gitea.ksol.io/karolyi/py3-validate-email/issues/98
 

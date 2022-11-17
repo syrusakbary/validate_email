@@ -9,9 +9,9 @@ This module is for Python 3.6 and above!
 
 ## INSTALLATION
 
-You can install the package with pip:
+Pypi removed newer versions due to license issues. You can install the packages right out from gitea, by keeping tags specified as versions. E.g. for version 1.0.9, you should use the following `pip install` syntax:
 
-    python -m pip install py3-validate-email
+    python -m pip install git+https://gitea.ksol.io/karolyi/py3-validate-email@v1.0.9
 
 ## USAGE
 
