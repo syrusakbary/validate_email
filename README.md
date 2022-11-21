@@ -13,6 +13,8 @@ Pypi removed newer versions due to license issues. You can install the packages 
 
     python -m pip install git+https://gitea.ksol.io/karolyi/py3-validate-email@v1.0.9
 
+Available version tags: [see here](https://gitea.ksol.io/karolyi/py3-validate-email/tags)
+
 ## USAGE
 
 Basic usage:
