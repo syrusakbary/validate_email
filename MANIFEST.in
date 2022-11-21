@@ -2,8 +2,10 @@ include AUTHORS
 include LICENSE
 include README.md
 include CHANGELOG.txt
+recursive-exclude .gitea *
 recursive-exclude tests *
 recursive-exclude * __pycache__
 recursive-exclude * *.pyc
 recursive-exclude * *.pyo
 recursive-exclude * *.orig
+exclude .gitignore .isort.cfg .travis.yml

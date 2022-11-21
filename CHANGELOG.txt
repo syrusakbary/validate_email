@@ -1,3 +1,7 @@
+1.0.10:
+- First pypi-free release (they removed everything between 1.0.6 and 1.0.9).
+- Removing unnecessary files from the source tarball.
+
 1.0.9:
 - License adjustments, help on installing directly from repository
 
