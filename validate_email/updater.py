@@ -21,10 +21,11 @@ LOGGER = getLogger(__name__)
 TMP_PATH = Path(gettempdir()).joinpath(
     f'{gettempprefix()}-py3-validate-email-{geteuid()}')
 ENV_IGNORE_UPDATER = environ.get('PY3VE_IGNORE_UPDATER')
+ENV_IGNORE_INSTALLER = environ.get('PY3VE_IGNORE_INSTALLER')
 BLACKLIST_URL = (
     'https://raw.githubusercontent.com/disposable-email-domains/' +
     'disposable-email-domains/master/disposable_email_blocklist.conf')
-LIB_PATH_DEFAULT = Path(__file__).resolve().parent.joinpath('data')
+LIB_PATH_DEFAULT = environ.get('PY3VE_LIB_PATH', Path(__file__).resolve().parent.joinpath('data'))
 BLACKLIST_FILEPATH_INSTALLED = LIB_PATH_DEFAULT.joinpath('blacklist.txt')
 BLACKLIST_FILEPATH_TMP = TMP_PATH.joinpath('blacklist.txt')
 ETAG_FILEPATH_INSTALLED = LIB_PATH_DEFAULT.joinpath('blacklist.etag.txt')
@@ -91,6 +92,9 @@ class BlacklistUpdater(object):
         installation of the library. Don't call this in your
         application.
         """
+        if ENV_IGNORE_INSTALLER:
+            LOGGER.debug(msg='Skipping install of built-in blacklist.')
+            return
         LIB_PATH_DEFAULT.mkdir(exist_ok=True)
         self._download(
             headers={}, blacklist_path=BLACKLIST_FILEPATH_INSTALLED,
